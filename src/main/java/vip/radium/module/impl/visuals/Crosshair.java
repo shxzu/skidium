@@ -13,7 +13,7 @@ import vip.radium.module.ModuleInfo;
 import vip.radium.property.Property;
 import vip.radium.property.impl.DoubleProperty;
 import vip.radium.utils.PlayerInfoCache;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 import vip.radium.utils.render.Colors;
 import vip.radium.utils.render.LockedResolution;
 import vip.radium.utils.render.RenderingUtils;
@@ -43,7 +43,7 @@ public final class Crosshair extends Module {
         double gap = gapProperty.getValue();
 
         if (dynamicProperty.getValue()) {
-            gap *= Math.max(Wrapper.getPlayer().isSneaking() ? 0.5D : 1.0D, RenderingUtils.interpolate(
+            gap *= Math.max(mc.thePlayer().isSneaking() ? 0.5D : 1.0D, RenderingUtils.interpolate(
                 PlayerInfoCache.getPrevLastDist(),
                 PlayerInfoCache.getLastDist(),
                 event.getPartialTicks()) * 10.0D);

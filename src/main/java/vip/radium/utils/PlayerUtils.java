@@ -38,7 +38,7 @@ public final class PlayerUtils {
     }
 
     public static boolean hasInvalidNetInfo(final EntityPlayer entity) {
-        final NetworkPlayerInfo info = Wrapper.getNetHandler().getPlayerInfo(entity.getUniqueID());
+        final NetworkPlayerInfo info = mc.getNetHandler().getPlayerInfo(entity.getUniqueID());
         return info == null || info.getResponseTime() != 1;
     }
 
@@ -54,7 +54,7 @@ public final class PlayerUtils {
 
     public static boolean isTeamMate(final EntityPlayer entity) {
         final String entName = entity.getDisplayName().getFormattedText();
-        final String playerName = Wrapper.getPlayer().getDisplayName().getFormattedText();
+        final String playerName = mc.thePlayer().getDisplayName().getFormattedText();
         if (entName.length() < 2 || playerName.length() < 2) return false;
         if (!entName.startsWith("\247") || !playerName.startsWith("\247")) return false;
         return entName.charAt(1) == playerName.charAt(1);

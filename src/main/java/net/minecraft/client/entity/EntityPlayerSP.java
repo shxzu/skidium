@@ -1,5 +1,6 @@
 package net.minecraft.client.entity;
 
+import net.minecraft.stats.StatList;
 import vip.radium.RadiumClient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MovingSoundMinecartRiding;
@@ -136,10 +137,10 @@ public class EntityPlayerSP extends AbstractClientPlayer {
 
     @Override
     public void moveEntity(double x, double y, double z) {
-        final MoveEntityEvent moveEntityEvent = new MoveEntityEvent(x, y, z);
-        RadiumClient.getInstance().getEventBus().post(moveEntityEvent);
-        if (moveEntityEvent.isCancelled()) return;
-        super.moveEntity(moveEntityEvent.getX(), moveEntityEvent.getY(), moveEntityEvent.getZ());
+        final MoveEvent moveEvent = new MoveEvent(x, y, z);
+        RadiumClient.getInstance().getEventBus().post(moveEvent);
+        if (moveEvent.isCancelled()) return;
+        super.moveEntity(moveEvent.getX(), moveEvent.getY(), moveEvent.getZ());
     }
 
     /**

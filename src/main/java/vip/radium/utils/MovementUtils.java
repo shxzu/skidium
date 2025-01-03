@@ -2,6 +2,7 @@ package vip.radium.utils;
 
 import net.minecraft.block.*;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.entity.Entity;
 import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
@@ -9,8 +10,10 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovementInput;
 import org.lwjgl.input.Keyboard;
-import vip.radium.event.impl.player.MoveEntityEvent;
+import vip.radium.event.impl.player.MoveEvent;
 import vip.radium.event.impl.player.UpdatePositionEvent;
+import vip.radium.module.ModuleManager;
+import vip.radium.module.impl.combat.KillAura;
 import vip.radium.module.impl.combat.TargetStrafe;
 import vip.radium.module.impl.movement.NoSlowdown;
 
@@ -45,8 +48,34 @@ public final class MovementUtils {
     public static final double MAX_DIST = 1.85F;
     public static final double BUNNY_DIV_FRICTION = 160.0 - 1.0E-3;
 
+    public static double getHorizontalSpeed() {
+        return getHorizontalSpeed(mc.thePlayer());
+    }
+
+    public static double getHorizontalSpeed(Entity entity) {
+        return Math.sqrt(entity.motionX * entity.motionX + entity.motionZ * entity.motionZ);
+    }
+
+    public static void setMotion(float forward, float strafe, float yaw, double speed) {
+        if (forward != 0.0F || strafe != 0.0F) {
+            if (((TargetStrafe) ModuleManager.getInstance(TargetStrafe.class)).isEnabled()) {
+                if (ModuleManager.getInstance(KillAura.class).getTarget() != null) {
+                    yaw = getMovementDirection(forward, strafe, yaw);
+                } else {
+                    yaw = getMovementDirection(forward, strafe, yaw);
+                }
+            } else {
+                yaw = getMovementDirection(forward, strafe, yaw);
+            }
+
+            double movementDirectionRads = Math.toRadians((double)yaw);
+            mc.thePlayer().motionX = -Math.sin(movementDirectionRads) * speed;
+            mc.thePlayer().motionZ = Math.cos(movementDirectionRads) * speed;
+        }
+    }
+
     public static int getJumpBoostModifier() {
-        PotionEffect effect = Wrapper.getPlayer().getActivePotionEffect(Potion.jump.id);
+        PotionEffect effect = mc.thePlayer().getActivePotionEffect(Potion.jump.id);
         if (effect != null)
             return effect.getAmplifier() + 1;
         return 0;
@@ -81,7 +110,7 @@ public final class MovementUtils {
     }
 
     public static int getSpeedModifier() {
-        PotionEffect effect = Wrapper.getPlayer().getActivePotionEffect(Potion.moveSpeed.id);
+        PotionEffect effect = mc.thePlayer().getActivePotionEffect(Potion.moveSpeed.id);
         if (effect != null)
             return effect.getAmplifier() + 1;
         return 0;
@@ -89,13 +118,33 @@ public final class MovementUtils {
 
 
     private static boolean isMovingEnoughForSprint() {
-        MovementInput movementInput = Wrapper.getPlayer().movementInput;
+        MovementInput movementInput = mc.thePlayer().movementInput;
         return movementInput.moveForward > 0.8F || movementInput.moveForward < -0.8F ||
             movementInput.moveStrafe > 0.8F || movementInput.moveStrafe < -0.8F;
     }
 
+    public static float getMovementDirection(float forward, float strafing, float yaw) {
+        if (forward == 0.0F && strafing == 0.0F) {
+            return yaw;
+        } else {
+            boolean reversed = forward < 0.0F;
+            float strafingYaw = 90.0F * (forward > 0.0F ? 0.5F : (reversed ? -0.5F : 1.0F));
+            if (reversed) {
+                yaw += 180.0F;
+            }
+
+            if (strafing > 0.0F) {
+                yaw -= strafingYaw;
+            } else if (strafing < 0.0F) {
+                yaw += strafingYaw;
+            }
+
+            return yaw;
+        }
+    }
+
     public static float getMovementDirection() {
-        final EntityPlayerSP player = Wrapper.getPlayer();
+        final EntityPlayerSP player = mc.thePlayer();
         float forward = player.moveForward;
         float strafe = player.moveStrafing;
 
@@ -131,27 +180,27 @@ public final class MovementUtils {
     }
 
     public static boolean isBlockAbove() {
-        return Wrapper.getWorld()
+        return mc.getWorld()
             .checkBlockCollision(
-                Wrapper.getPlayer().getEntityBoundingBox()
+                mc.thePlayer().getEntityBoundingBox()
                     .addCoord(0.0D, 1.0D, 0.0D));
     }
 
     public static boolean isDistFromGround(double dist) {
-        return Wrapper.getWorld()
+        return mc.getWorld()
                 .checkBlockCollision(
-                        Wrapper.getPlayer().getEntityBoundingBox()
+                        mc.thePlayer().getEntityBoundingBox()
                                 .addCoord(0.0D, -dist, 0.0D));
     }
 
     public static double estimateDistFromGround(int maxIterations) {
-        final int playerPosY = (int) Math.floor(Wrapper.getPlayer().posY);
+        final int playerPosY = (int) Math.floor(mc.thePlayer().posY);
         final int min = playerPosY - maxIterations;
 
         for (int i = playerPosY; i > min; i -= 2) {
-            if (Wrapper.getWorld()
+            if (mc.getWorld()
                     .checkBlockCollision(
-                            Wrapper.getPlayer().getEntityBoundingBox()
+                            mc.thePlayer().getEntityBoundingBox()
                                     .addCoord(0.0D, -(playerPosY - i), 0.0D))) {
                 return playerPosY - i;
             }
@@ -162,7 +211,7 @@ public final class MovementUtils {
 
     public static boolean fallDistDamage() {
         if (isBlockAbove() || !ServerUtils.isOnHypixel() || !HypixelGameUtils.hasGameStarted()) return false;
-        final UpdatePositionEvent e = Wrapper.getPlayer().currentEvent;
+        final UpdatePositionEvent e = mc.thePlayer().currentEvent;
         final double x = e.getPosX();
         final double y = e.getPosY();
         final double z = e.getPosZ();
@@ -171,10 +220,10 @@ public final class MovementUtils {
         final double packets = Math.ceil(getMinFallDist() / (offset - smallOffset));
 
         for (int i = 0; i < packets; i++) {
-            Wrapper.sendPacketDirect(new C03PacketPlayer.C04PacketPlayerPosition(
+            mc.sendPacketDirect(new C03PacketPlayer.C04PacketPlayerPosition(
                 x, y + offset, z,
                 false));
-            Wrapper.sendPacketDirect(new C03PacketPlayer.C04PacketPlayerPosition(
+            mc.sendPacketDirect(new C03PacketPlayer.C04PacketPlayerPosition(
                 x, y + smallOffset, z,
                 false));
         }
@@ -182,13 +231,13 @@ public final class MovementUtils {
     }
 
     public static boolean isInLiquid() {
-        return Wrapper.getPlayer().isInWater() || Wrapper.getPlayer().isInLava();
+        return mc.thePlayer().isInWater() || mc.thePlayer().isInLava();
     }
 
     public static boolean isOverVoid() {
-        for (double posY = Wrapper.getPlayer().posY; posY > 0.0; posY--) {
-            if (!(Wrapper.getWorld().getBlockState(
-                new BlockPos(Wrapper.getPlayer().posX, posY, Wrapper.getPlayer().posZ)).getBlock() instanceof BlockAir))
+        for (double posY = mc.thePlayer().posY; posY > 0.0; posY--) {
+            if (!(mc.getWorld().getBlockState(
+                new BlockPos(mc.thePlayer().posX, posY, mc.thePlayer().posZ)).getBlock() instanceof BlockAir))
                 return false;
         }
 
@@ -199,8 +248,8 @@ public final class MovementUtils {
         double baseJumpHeight = VANILLA_JUMP_HEIGHT;
         if (isInLiquid()) {
             return WALK_SPEED * SWIM_MOD + 0.02F;
-        } else if (Wrapper.getPlayer().isPotionActive(Potion.jump)) {
-            return baseJumpHeight + (Wrapper.getPlayer().getActivePotionEffect(Potion.jump).getAmplifier() + 1.0F) * 0.1F;
+        } else if (mc.thePlayer().isPotionActive(Potion.jump)) {
+            return baseJumpHeight + (mc.thePlayer().getActivePotionEffect(Potion.jump).getAmplifier() + 1.0F) * 0.1F;
         }
         return baseJumpHeight;
     }
@@ -208,18 +257,75 @@ public final class MovementUtils {
     public static double getMinFallDist() {
         final boolean isSg = HypixelGameUtils.getGameMode() == HypixelGameUtils.GameMode.BLITZ_SG;
         double baseFallDist = isSg ? 4.0D : 3.0D;
-        if (Wrapper.getPlayer().isPotionActive(Potion.jump))
-            baseFallDist += Wrapper.getPlayer().getActivePotionEffect(Potion.jump).getAmplifier() + 1.0F;
+        if (mc.thePlayer().isPotionActive(Potion.jump))
+            baseFallDist += mc.thePlayer().getActivePotionEffect(Potion.jump).getAmplifier() + 1.0F;
         return baseFallDist;
     }
 
+    public static double getSpeed() {
+        return mc.thePlayer() == null ? 0 : Math.sqrt(mc.thePlayer().motionX * mc.thePlayer().motionX
+                + mc.thePlayer().motionZ * mc.thePlayer().motionZ);
+    }
+
+    public double getSpeed(MoveEvent moveEvent) {
+        return mc.thePlayer() == null ? 0 : Math.sqrt(moveEvent.getX() * moveEvent.getX() + moveEvent.getZ() * moveEvent.getZ());
+    }
+    
+    public static void strafe() {
+        strafe(getSpeed());
+    }
+
+    public void strafe(MoveEvent event) {
+        strafe(event, getSpeed());
+    }
+
+    public static void strafe(double movementSpeed) {
+        strafe(null, movementSpeed);
+    }
+
+    public static void strafe(MoveEvent moveEvent, double movementSpeed) {
+        if (mc.thePlayer().movementInput.moveForward > 0.0) {
+            mc.thePlayer().movementInput.moveForward = (float) 1.0;
+        } else if (mc.thePlayer().movementInput.moveForward < 0.0) {
+            mc.thePlayer().movementInput.moveForward = (float) -1.0;
+        }
+
+        if (mc.thePlayer().movementInput.moveStrafe > 0.0) {
+            mc.thePlayer().movementInput.moveStrafe = (float) 1.0;
+        } else if (mc.thePlayer().movementInput.moveStrafe < 0.0) {
+            mc.thePlayer().movementInput.moveStrafe = (float) -1.0;
+        }
+
+        if (mc.thePlayer().movementInput.moveForward == 0.0 && mc.thePlayer().movementInput.moveStrafe == 0.0) {
+            mc.thePlayer().motionX = 0.0;
+            mc.thePlayer().motionZ = 0.0;
+        }
+
+        if (mc.thePlayer().movementInput.moveForward != 0.0 && mc.thePlayer().movementInput.moveStrafe != 0.0) {
+            mc.thePlayer().movementInput.moveForward *= (float) Math.sin(0.6398355709958845);
+            mc.thePlayer().movementInput.moveStrafe *= (float) Math.cos(0.6398355709958845);
+        }
+
+        if (moveEvent != null) {
+            moveEvent.setX(mc.thePlayer().motionX = mc.thePlayer().movementInput.moveForward * movementSpeed * -Math.sin(Math.toRadians(mc.thePlayer().rotationYaw))
+                    + mc.thePlayer().movementInput.moveStrafe * movementSpeed * Math.cos(Math.toRadians(mc.thePlayer().rotationYaw)));
+            moveEvent.setZ(mc.thePlayer().motionZ = mc.thePlayer().movementInput.moveForward * movementSpeed * Math.cos(Math.toRadians(mc.thePlayer().rotationYaw))
+                    - mc.thePlayer().movementInput.moveStrafe * movementSpeed * -Math.sin(Math.toRadians(mc.thePlayer().rotationYaw)));
+        } else {
+            mc.thePlayer().motionX = mc.thePlayer().movementInput.moveForward * movementSpeed * -Math.sin(Math.toRadians(mc.thePlayer().rotationYaw))
+                    + mc.thePlayer().movementInput.moveStrafe * movementSpeed * Math.cos(Math.toRadians(mc.thePlayer().rotationYaw));
+            mc.thePlayer().motionZ = mc.thePlayer().movementInput.moveForward * movementSpeed * Math.cos(Math.toRadians(mc.thePlayer().rotationYaw))
+                    - mc.thePlayer().movementInput.moveStrafe * movementSpeed * -Math.sin(Math.toRadians(mc.thePlayer().rotationYaw));
+        }
+    }
+    
     public static double calculateFriction(double moveSpeed, double lastDist, double baseMoveSpeedRef) {
         frictionValues.set(0, lastDist - (lastDist / BUNNY_DIV_FRICTION));
         frictionValues.set(1, lastDist - ((moveSpeed - lastDist) / 33.3D));
         double materialFriction =
-            Wrapper.getPlayer().isInWater() ?
+            mc.thePlayer().isInWater() ?
                 WATER_FRICTION :
-                Wrapper.getPlayer().isInLava() ?
+                mc.thePlayer().isInLava() ?
                     LAVA_FRICTION :
                     AIR_FRICTION;
         frictionValues.set(2, lastDist - (baseMoveSpeedRef * (1.0D - materialFriction)));
@@ -232,8 +338,8 @@ public final class MovementUtils {
     }
 
     public static Block getBlockUnder(double offset) {
-        EntityPlayerSP player = Wrapper.getPlayer();
-        return Wrapper.getWorld().getBlockState(
+        EntityPlayerSP player = mc.thePlayer();
+        return mc.getWorld().getBlockState(
             new BlockPos(
                 player.posX,
                 player.posY - offset,
@@ -241,11 +347,11 @@ public final class MovementUtils {
     }
 
     public static double getBlockHeight() {
-        return Wrapper.getPlayer().posY - (int) Wrapper.getPlayer().posY;
+        return mc.thePlayer().posY - (int) mc.thePlayer().posY;
     }
 
     public static boolean canSprint(boolean omni) {
-        final EntityPlayerSP player = Wrapper.getPlayer();
+        final EntityPlayerSP player = mc.thePlayer();
         return (omni ? isMovingEnoughForSprint() : player.movementInput.moveForward >= 0.8F) &&
             !player.isCollidedHorizontally &&
             (player.getFoodStats().getFoodLevel() > 6 ||
@@ -256,7 +362,7 @@ public final class MovementUtils {
     }
 
     public static double getBaseMoveSpeed() {
-        final EntityPlayerSP player = Wrapper.getPlayer();
+        final EntityPlayerSP player = mc.thePlayer();
         double base = player.isSneaking() ? WALK_SPEED * MovementUtils.SNEAK_MOD : canSprint(true) ? WALK_SPEED * SPRINTING_MOD : WALK_SPEED;
 
         PotionEffect moveSpeed = player.getActivePotionEffect(Potion.moveSpeed.id);
@@ -281,8 +387,8 @@ public final class MovementUtils {
         return base;
     }
 
-    public static void setSpeed(MoveEntityEvent e, double speed) {
-        final EntityPlayerSP player = Wrapper.getPlayer();
+    public static void setSpeed(MoveEvent e, double speed) {
+        final EntityPlayerSP player = mc.thePlayer();
         final TargetStrafe targetStrafe = TargetStrafe.getInstance();
         if (targetStrafe.isEnabled() &&
             (!targetStrafe.holdSpaceProperty.getValue() || Keyboard.isKeyDown(Keyboard.KEY_SPACE))) {
@@ -296,7 +402,7 @@ public final class MovementUtils {
         setSpeed(e, speed, player.moveForward, player.moveStrafing, player.rotationYaw);
     }
 
-    public static void setSpeed(MoveEntityEvent e, double speed, float forward, float strafing, float yaw) {
+    public static void setSpeed(MoveEvent e, double speed, float forward, float strafing, float yaw) {
         if (forward == 0.0F && strafing == 0.0F)
             return;
 
@@ -321,10 +427,10 @@ public final class MovementUtils {
     public static boolean isOnGround() {
 //        List<AxisAlignedBB> collidingList = Wrapper.getWorld().getCollidingBoundingBoxes(Wrapper.getPlayer(), Wrapper.getPlayer().getEntityBoundingBox().offset(0.0, -(0.01 - MIN_DIF), 0.0));
 //        return collidingList.size() > 0;
-        return Wrapper.getPlayer().onGround && Wrapper.getPlayer().isCollidedVertically;
+        return mc.thePlayer().onGround && mc.thePlayer().isCollidedVertically;
     }
 
     public static boolean isMoving() {
-        return Wrapper.getPlayer().movementInput.moveForward != 0.0F || Wrapper.getPlayer().movementInput.moveStrafe != 0.0F;
+        return mc.thePlayer().movementInput.moveForward != 0.0F || mc.thePlayer().movementInput.moveStrafe != 0.0F;
     }
 }

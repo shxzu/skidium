@@ -22,7 +22,7 @@ import vip.radium.property.impl.DoubleProperty;
 import vip.radium.property.impl.EnumProperty;
 import vip.radium.property.impl.Representation;
 import vip.radium.utils.PlayerUtils;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 import vip.radium.utils.render.LockedResolution;
 import vip.radium.utils.render.OGLUtils;
 import vip.radium.utils.render.RenderingUtils;
@@ -71,7 +71,7 @@ public final class TargetHUD extends Module {
             final boolean isPlayer = target instanceof EntityOtherPlayerMP;
 
             final LockedResolution lr = event.getResolution();
-            final FontRenderer fontRenderer = Wrapper.getMinecraftFontRenderer();
+            final FontRenderer fontRenderer = mc.getMinecraftFontRenderer();
 
             final int sWidth = lr.getWidth();
             final int sHeight = lr.getHeight();
@@ -168,7 +168,7 @@ public final class TargetHUD extends Module {
             if (isPlayer) {
                 final EntityPlayer player = (EntityPlayer) target;
                 final int targetArmor = this.getOrCacheArmor(player);
-                final int localArmor = this.getOrCacheArmor(Wrapper.getPlayer());
+                final int localArmor = this.getOrCacheArmor(mc.thePlayer());
 
                 final char prefix;
                 if (targetArmor > localArmor) {

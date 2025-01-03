@@ -14,7 +14,7 @@ import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL11;
 import vip.radium.gui.font.FontRenderer;
 import vip.radium.utils.MathUtils;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 import java.awt.*;
 
@@ -39,7 +39,7 @@ public final class RenderingUtils {
     }
 
     public static boolean isBBInFrustum(AxisAlignedBB aabb) {
-        EntityPlayerSP player = Wrapper.getPlayer();
+        EntityPlayerSP player = mc.thePlayer();
         FRUSTUM.setPosition(player.posX, player.posY, player.posZ);
         return FRUSTUM.isBoundingBoxInFrustum(aabb);
     }
@@ -91,7 +91,7 @@ public final class RenderingUtils {
     public static ScaledResolution getScaledResolution() {
         int displayWidth = Display.getWidth();
         int displayHeight = Display.getHeight();
-        int guiScale = Wrapper.getGameSettings().guiScale;
+        int guiScale = mc.getGameSettings().guiScale;
 
         if (displayWidth != lastScaledWidth ||
             displayHeight != lastScaledHeight ||
@@ -99,7 +99,7 @@ public final class RenderingUtils {
             lastScaledWidth = displayWidth;
             lastScaledHeight = displayHeight;
             lastGuiScale = guiScale;
-            return scaledResolution = new ScaledResolution(Wrapper.getMinecraft());
+            return scaledResolution = new ScaledResolution(mc.getMinecraft());
         }
 
         return scaledResolution;
@@ -263,7 +263,7 @@ public final class RenderingUtils {
                                  float g,
                                  float b,
                                  ResourceLocation image) {
-        Wrapper.getMinecraft().getTextureManager().bindTexture(image);
+        mc.getMinecraft().getTextureManager().bindTexture(image);
         float f = 1.0F / width;
         float f1 = 1.0F / height;
         glColor4f(r, g, b, 1.0F);

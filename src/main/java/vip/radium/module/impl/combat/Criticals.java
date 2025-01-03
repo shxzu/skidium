@@ -16,7 +16,7 @@ import vip.radium.property.impl.Representation;
 import vip.radium.utils.MovementUtils;
 import vip.radium.utils.ServerUtils;
 import vip.radium.utils.TimerUtil;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 @ModuleInfo(label = "Criticals", category = ModuleCategory.COMBAT)
 public final class Criticals extends Module {
@@ -45,7 +45,7 @@ public final class Criticals extends Module {
     private boolean hasTarget() {
         if (KillAura.getInstance().getTarget() != null)
             return true;
-        final MovingObjectPosition target = Wrapper.getMinecraft().objectMouseOver;
+        final MovingObjectPosition target = mc.getMinecraft().objectMouseOver;
         return target != null && target.entityHit != null;
     }
 
@@ -58,11 +58,11 @@ public final class Criticals extends Module {
                     if (timer.hasElapsed(delayProperty.getValue().longValue())) {
                         if (groundTicks > 1) {
                             for (double offset : criticalsModeProperty.getValue().offsets) {
-                                Wrapper.sendPacketDirect(
+                                mc.sendPacketDirect(
                                         new C03PacketPlayer.C04PacketPlayerPosition(
-                                                Wrapper.getPlayer().posX,
-                                                Wrapper.getPlayer().posY + offset + (StrictMath.random() * 0.0003F),
-                                                Wrapper.getPlayer().posZ,
+                                                mc.thePlayer().posX,
+                                                mc.thePlayer().posY + offset + (StrictMath.random() * 0.0003F),
+                                                mc.thePlayer().posZ,
                                                 false));
                             }
                             timer.reset();

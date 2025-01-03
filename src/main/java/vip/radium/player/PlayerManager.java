@@ -3,7 +3,7 @@ package vip.radium.player;
 import net.minecraft.entity.player.EntityPlayer;
 import vip.radium.RadiumClient;
 import vip.radium.utils.FileUtils;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 import vip.radium.utils.handler.Manager;
 
 import java.io.File;
@@ -54,7 +54,7 @@ public final class PlayerManager extends Manager<Player> {
     }
 
     public String add(String playerName, String alias , boolean enemy) {
-        for (EntityPlayer player : Wrapper.getLoadedPlayers()) {
+        for (EntityPlayer player : mc.getLoadedPlayers()) {
             final String username = player.getGameProfile().getName();
             if (username.equalsIgnoreCase(playerName)) {
                 getElements().add(new Player(alias, playerName, enemy ? Player.PlayerType.ENEMY : Player.PlayerType.FRIEND));

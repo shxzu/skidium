@@ -177,7 +177,7 @@ public class Gui {
     /**
      * Renders the specified text to the screen, center-aligned. Args : renderer, string, x, y, color
      */
-    public void drawCenteredString(MinecraftFontRenderer fontRendererIn, String text, int x, int y, int color) {
+    public static void drawCenteredString(MinecraftFontRenderer fontRendererIn, String text, int x, int y, int color) {
         fontRendererIn.drawStringWithShadow(text, (float) (x - fontRendererIn.getStringWidth(text) / 2), (float) y, color);
     }
 

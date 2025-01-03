@@ -18,7 +18,7 @@ import vip.radium.notification.Notification;
 import vip.radium.notification.NotificationType;
 import vip.radium.utils.MathUtils;
 import vip.radium.utils.MovementUtils;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 @ModuleInfo(label = "Auto Bow", category = ModuleCategory.MISCELLANEOUS)
 public final class AutoBow extends Module {
@@ -46,13 +46,13 @@ public final class AutoBow extends Module {
 
             if (!isCharging) {
                 if (MovementUtils.isOnGround() || MathUtils.roundToDecimalPlace(MovementUtils.getBlockHeight(), 0.001D) == 0.166D) {
-                    final boolean needSwitch = Wrapper.getPlayer().inventory.currentItem != bowSlot;
+                    final boolean needSwitch = mc.thePlayer().inventory.currentItem != bowSlot;
 
                     if (needSwitch)
-                        Wrapper.sendPacketDirect(new C09PacketHeldItemChange(bowSlot));
+                        mc.sendPacketDirect(new C09PacketHeldItemChange(bowSlot));
 
                     this.bowSlot = bowSlot;
-                    Wrapper.sendPacketDirect(BLOCK_PLACEMENT);
+                    mc.sendPacketDirect(BLOCK_PLACEMENT);
                     isCharging = true;
                     chargedTicks = 0;
                 }
@@ -71,10 +71,10 @@ public final class AutoBow extends Module {
                         event.setPitch(-90.0F);
                         break;
                     case 3:
-                        final int physicalHeldItem = Wrapper.getPlayer().inventory.currentItem;
-                        Wrapper.sendPacketDirect(PLAYER_DIGGING);
+                        final int physicalHeldItem = mc.thePlayer().inventory.currentItem;
+                        mc.sendPacketDirect(PLAYER_DIGGING);
                         if (this.bowSlot != physicalHeldItem)
-                            Wrapper.sendPacketDirect(new C09PacketHeldItemChange(physicalHeldItem));
+                            mc.sendPacketDirect(new C09PacketHeldItemChange(physicalHeldItem));
                         isCharging = false;
                         toggle();
                 }
@@ -90,7 +90,7 @@ public final class AutoBow extends Module {
 
     private int findBowInHotBar() {
         for (int i = 36; i < 45; i++) {
-            ItemStack stack = Wrapper.getStackInSlot(i);
+            ItemStack stack = mc.getStackInSlot(i);
 
             if (stack != null && stack.getItem() instanceof ItemBow)
                 return i - 36;

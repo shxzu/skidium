@@ -21,7 +21,7 @@ import vip.radium.property.impl.DoubleProperty;
 import vip.radium.property.impl.EnumProperty;
 import vip.radium.property.impl.Representation;
 import vip.radium.utils.TimerUtil;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 import vip.radium.utils.render.LockedResolution;
 import vip.radium.utils.render.OGLUtils;
 import vip.radium.utils.render.RenderingUtils;
@@ -153,16 +153,16 @@ public final class Hitmarkers extends Module {
     private void playSound() {
         switch(soundTypeProperty.getValue()) {
             case SKEET:
-                Minecraft.getMinecraft().getSoundHandler().playSoundFromFile("skeet.ogg", Wrapper.getPlayer().posX, Wrapper.getPlayer().posY, Wrapper.getPlayer().posZ);
+                Minecraft.getMinecraft().getSoundHandler().playSoundFromFile("skeet.ogg", mc.thePlayer().posX, mc.thePlayer().posY, mc.thePlayer().posZ);
                 break;
             case NEKO:
-                Minecraft.getMinecraft().getSoundHandler().playSoundFromFile("neko.ogg", Wrapper.getPlayer().posX, Wrapper.getPlayer().posY, Wrapper.getPlayer().posZ);
+                Minecraft.getMinecraft().getSoundHandler().playSoundFromFile("neko.ogg", mc.thePlayer().posX, mc.thePlayer().posY, mc.thePlayer().posZ);
                 break;
             case RIFK:
-                Minecraft.getMinecraft().getSoundHandler().playSoundFromFile("rifk.ogg", Wrapper.getPlayer().posX, Wrapper.getPlayer().posY, Wrapper.getPlayer().posZ);
+                Minecraft.getMinecraft().getSoundHandler().playSoundFromFile("rifk.ogg", mc.thePlayer().posX, mc.thePlayer().posY, mc.thePlayer().posZ);
                 break;
             case BASIC:
-                Minecraft.getMinecraft().getSoundHandler().playSoundFromFile("basic.ogg", Wrapper.getPlayer().posX, Wrapper.getPlayer().posY, Wrapper.getPlayer().posZ);
+                Minecraft.getMinecraft().getSoundHandler().playSoundFromFile("basic.ogg", mc.thePlayer().posX, mc.thePlayer().posY, mc.thePlayer().posZ);
                 break;
         }
     }

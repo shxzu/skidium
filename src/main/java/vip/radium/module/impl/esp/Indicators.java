@@ -16,7 +16,7 @@ import vip.radium.property.Property;
 import vip.radium.property.impl.DoubleProperty;
 import vip.radium.property.impl.EnumProperty;
 import vip.radium.utils.RotationUtils;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 import vip.radium.utils.render.Colors;
 import vip.radium.utils.render.LockedResolution;
 import vip.radium.utils.render.OGLUtils;
@@ -81,9 +81,9 @@ public final class Indicators extends Module {
     @EventLink
     public final Listener<UpdatePositionEvent> onUpdatePos = event -> {
         if (fadeOutProperty.getValue()) {
-            final EntityPlayer localPlayer = Wrapper.getPlayer();
+            final EntityPlayer localPlayer = mc.thePlayer();
 
-            for (EntityPlayer player : Wrapper.getLoadedPlayers()) {
+            for (EntityPlayer player : mc.getLoadedPlayers()) {
                 if (player instanceof EntityOtherPlayerMP && player.isEntityAlive() && !player.isInvisible() && !RenderingUtils.isBBInFrustum(player.getEntityBoundingBox())) {
                     playerAlphaMap.put(player, 1.0F - player.getDistanceToEntity(localPlayer) / 40.0F);
                 }
@@ -112,15 +112,15 @@ public final class Indicators extends Module {
         final boolean outline = outlineProperty.getValue();
         final ArrowsShape shape = arrowShapeProperty.getValue();
 
-        for (EntityPlayer player : Wrapper.getLoadedPlayers()) {
+        for (EntityPlayer player : mc.getLoadedPlayers()) {
             if (player instanceof EntityOtherPlayerMP && player.isEntityAlive() && !player.isInvisible() && !RenderingUtils.isBBInFrustum(player.getEntityBoundingBox())) {
                 float yaw = RenderingUtils.interpolate(
                         RotationUtils.getOldYaw(player),
                         RotationUtils.getYawToEntity(player),
                         pt) -
                         RenderingUtils.interpolate(
-                                Wrapper.getPlayer().prevRotationYaw,
-                                Wrapper.getPlayer().rotationYaw,
+                                mc.thePlayer().prevRotationYaw,
+                                mc.thePlayer().rotationYaw,
                                 pt);
                 glPushMatrix();
                 glScaled(distortion, 1.0, 1.0);

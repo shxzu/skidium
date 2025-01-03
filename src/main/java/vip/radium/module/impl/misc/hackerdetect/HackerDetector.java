@@ -16,7 +16,7 @@ import vip.radium.notification.Notification;
 import vip.radium.notification.NotificationType;
 import vip.radium.property.impl.DoubleProperty;
 import vip.radium.property.impl.MultiSelectEnumProperty;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +33,7 @@ public final class HackerDetector extends Module {
     @EventLink
     public final Listener<UpdatePositionEvent> onUpdatePositionEvent = event -> {
         if (event.isPre()) {
-            for (EntityPlayer player : Wrapper.getLoadedPlayers()) {
+            for (EntityPlayer player : mc.getLoadedPlayers()) {
                 if (player instanceof EntityPlayerSP)
                     continue;
                 for (CheckType check : checksProperty.getValues()) {

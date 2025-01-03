@@ -18,7 +18,7 @@ import vip.radium.module.ModuleInfo;
 import vip.radium.module.ModuleManager;
 import vip.radium.property.Property;
 import vip.radium.property.impl.EnumProperty;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 import vip.radium.utils.render.Colors;
 import vip.radium.utils.render.OGLUtils;
 
@@ -56,11 +56,11 @@ public final class ChestESP extends Module {
                 glLineWidth(1.0F);
             }
 
-            for (TileEntity entity : Wrapper.getWorld().loadedTileEntityList) {
+            for (TileEntity entity : mc.getWorld().loadedTileEntityList) {
                 if (entity instanceof TileEntityChest) {
                     BlockPos pos = entity.getPos();
                     AxisAlignedBB bb = entity.getBlockType().getCollisionBoundingBox(
-                            Wrapper.getWorld(),
+                            mc.getWorld(),
                             pos,
                             entity.getBlockType().getStateFromMeta(
                                     entity.getBlockMetadata()));

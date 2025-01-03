@@ -10,7 +10,7 @@ import vip.radium.event.impl.world.BlockCollisionEvent;
 import vip.radium.module.Module;
 import vip.radium.module.ModuleCategory;
 import vip.radium.module.ModuleInfo;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 @ModuleInfo(label = "Jesus", category = ModuleCategory.MOVEMENT)
 public final class Jesus extends Module {
@@ -19,7 +19,7 @@ public final class Jesus extends Module {
 
     @EventLink
     private final Listener<UpdatePositionEvent> onUpdatePosition = event -> {
-        if (event.isPre() && onLiquid && Wrapper.getPlayer().ticksExisted % 2 == 0) {
+        if (event.isPre() && onLiquid && mc.thePlayer().ticksExisted % 2 == 0) {
             event.setPosY(event.getPosY() + 0.000001F);
             onLiquid = false;
         }
@@ -27,7 +27,7 @@ public final class Jesus extends Module {
 
     @EventLink
     private final Listener<BlockCollisionEvent> onBlockCollision = event -> {
-        if (event.getBlock() instanceof BlockLiquid && !Wrapper.getPlayer().isSneaking()) {
+        if (event.getBlock() instanceof BlockLiquid && !mc.thePlayer().isSneaking()) {
             final BlockPos blockPos = event.getBlockPos();
             final double x = blockPos.getX();
             final double y = blockPos.getY();

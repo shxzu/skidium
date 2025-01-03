@@ -6,7 +6,7 @@ import net.minecraft.util.MathHelper;
 import org.lwjgl.opengl.GL11;
 import vip.radium.gui.font.FontManager;
 import vip.radium.utils.TimerUtil;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 import vip.radium.utils.render.LockedResolution;
 import vip.radium.utils.render.OGLUtils;
 import vip.radium.utils.render.RenderingUtils;
@@ -33,7 +33,7 @@ public final class Notification {
             this.width = FontManager.FR.getWidth(title) + 4;
 
         this.height = 27.0F;
-        if (Wrapper.getCurrentScreen() == null) {
+        if (mc.getCurrentScreen() == null) {
             LockedResolution lr = RenderingUtils.getLockedResolution();
             this.translate = new Translate(lr.getWidth(), lr.getHeight() - height - 2);
         } else {

@@ -9,7 +9,6 @@ import vip.radium.gui.csgo.component.ExpandableComponent;
 import vip.radium.gui.csgo.component.PredicateComponent;
 import vip.radium.gui.font.FontRenderer;
 import vip.radium.utils.StringUtils;
-import vip.radium.utils.Wrapper;
 import vip.radium.utils.render.LockedResolution;
 import vip.radium.utils.render.OGLUtils;
 import vip.radium.utils.render.RenderingUtils;

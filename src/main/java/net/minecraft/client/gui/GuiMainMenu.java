@@ -1,8 +1,7 @@
 package net.minecraft.client.gui;
 
 import vip.radium.RadiumClient;
-import vip.radium.gui.alt.impl.GuiAltManager;
-import vip.radium.utils.Wrapper;
+import vip.radium.gui.alt.AltManagerGui;
 import vip.radium.utils.render.Colors;
 import vip.radium.utils.render.RenderingUtils;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -67,7 +66,7 @@ public class GuiMainMenu extends GuiScreen implements GuiYesNoCallback {
         } else if (button.id == 14) {
             this.mc.displayGuiScreen(new GuiMultiplayer(this));
         } else if (button.id == 100) {
-            this.mc.displayGuiScreen(new GuiAltManager(this));
+            this.mc.displayGuiScreen(new AltManagerGui());
         } else if (button.id == 4) {
             this.mc.shutdown();
         } else if (button.id == 6 && Reflector.GuiModList_Constructor.exists()) {
@@ -83,8 +82,8 @@ public class GuiMainMenu extends GuiScreen implements GuiYesNoCallback {
 
         float scale = 4;
 
-        float firstCharWidth = Wrapper.getMinecraftFontRenderer().getWidth(firstChar);
-        float restOfNameWidth = Wrapper.getMinecraftFontRenderer().getWidth(restOfName);
+        float firstCharWidth = vip.radium.utils.mc.getMinecraftFontRenderer().getWidth(firstChar);
+        float restOfNameWidth = vip.radium.utils.mc.getMinecraftFontRenderer().getWidth(restOfName);
 
         float textX = width / 2.0F - (((firstCharWidth + restOfNameWidth) * scale) / 2);
         int textHeight = this.height / 4 - 24;
@@ -93,7 +92,7 @@ public class GuiMainMenu extends GuiScreen implements GuiYesNoCallback {
         textHeight /= scale;
         GL11.glScaled(scale, scale, 1);
 
-        Wrapper.getMinecraftFontRenderer().drawStringWithShadow(RadiumClient.NAME,
+        vip.radium.utils.mc.getMinecraftFontRenderer().drawStringWithShadow(RadiumClient.NAME,
                 textX, textHeight, Colors.DEEP_PURPLE);
 
         GL11.glScaled(1 / scale, 1 / scale, 1);

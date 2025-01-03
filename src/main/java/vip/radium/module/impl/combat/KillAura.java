@@ -10,10 +10,8 @@ import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
-import net.minecraft.network.play.client.C02PacketUseEntity;
-import net.minecraft.network.play.client.C03PacketPlayer;
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement;
-import net.minecraft.network.play.client.C0APacketAnimation;
+import net.minecraft.network.Packet;
+import net.minecraft.network.play.client.*;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
@@ -35,6 +33,7 @@ import vip.radium.property.impl.EnumProperty;
 import vip.radium.property.impl.MultiSelectEnumProperty;
 import vip.radium.property.impl.Representation;
 import vip.radium.utils.*;
+import vip.radium.utils.handler.BPH;
 import vip.radium.utils.render.LockedResolution;
 import vip.radium.utils.render.RenderingUtils;
 
@@ -50,8 +49,9 @@ public final class KillAura extends Module {
             new BlockPos(-0.0F, -0.0F, -0.0F), 255, null, 0.0f, 0.0f, 0.0f);
     public static int waitTicks;
     private final EnumProperty<AuraMode> auraModeProperty = new EnumProperty<>("Mode", AuraMode.PRIORITY);
+    private final EnumProperty<AutoblockMode> autoblockProperty = new EnumProperty<>("Autoblock Mode", AutoblockMode.VANILLA);
     private final EnumProperty<SortingMethod> sortingMethodProperty = new EnumProperty<>("Sorting Method", SortingMethod.HEALTH);
-    private final EnumProperty<AttackMethod> attackMethodProperty = new EnumProperty<>("Attack Method", AttackMethod.POST);
+    private final EnumProperty<AttackMethod> attackMethodProperty = new EnumProperty<>("Attack Method", AttackMethod.PRE);
     private final Property<Boolean> duraProperty = new Property<>("Dura", false);
     private final DoubleProperty minApsProperty = new DoubleProperty("Min APS", 8.0,
             () -> !this.duraProperty.getValue(), 1.0, 20.0, 1.0);
@@ -61,10 +61,6 @@ public final class KillAura extends Module {
             6.0, 0.1, Representation.DISTANCE);
     private final DoubleProperty rangeThruWalls = new DoubleProperty("Wall Range", 2.0, 1.0,
             8.0, 0.1, Representation.DISTANCE);
-    private final Property<Boolean> autoblockProperty = new Property<>("Autoblock", true);
-    private final DoubleProperty blockRangeProperty = new DoubleProperty("Block Range", 8.0,
-            autoblockProperty::getValue,
-            3.0, 8.0, 0.1, Representation.DISTANCE);
     private final MultiSelectEnumProperty<Checks> checksProperty = new MultiSelectEnumProperty<>("Checks", Checks.ALIVE, Checks.ROTATION);
     private final DoubleProperty maxAngleChangeProperty = new DoubleProperty("Max Angle Step", 45.0, 1.0, 201.25, 0.25);
     private final DoubleProperty fovProperty = new DoubleProperty("Scan Degrees", 201.25, () -> checksProperty.isSelected(Checks.FOV), 0, 201.25, 0.25);
@@ -94,12 +90,44 @@ public final class KillAura extends Module {
     private EntityLivingBase target;
     private boolean entityInBlockRange;
     private Scaffold scaffold;
+    private boolean swapped;
 
     @EventLink
     public final Listener<PacketSendEvent> onPacketSendEvent = event -> {
-        if (event.getPacket() instanceof C0APacketAnimation)
+        final Packet<?> packet = event.getPacket();
+        if (event.getPacket() instanceof C0APacketAnimation) {
             this.attackTimer.reset();
-    };
+        }
+        switch (autoblockProperty.getValue()) {
+            case FAKE:
+                if(this.target != null && isHoldingSword()) {
+                    mc.thePlayer().setItemInUse(mc.thePlayer().inventory.getCurrentItem(), 32678);
+                    if (packet instanceof C08PacketPlayerBlockPlacement) {
+                        final C08PacketPlayerBlockPlacement wrapper = (C08PacketPlayerBlockPlacement) packet;
+
+                        if (wrapper.getPlacedBlockDirection() == 255) {
+                            event.setCancelled(true);
+                        }
+                    } else if (packet instanceof C07PacketPlayerDigging) {
+                        C07PacketPlayerDigging wrapper = ((C07PacketPlayerDigging) packet);
+
+                        if (wrapper.getStatus() == C07PacketPlayerDigging.Action.RELEASE_USE_ITEM) {
+                            event.setCancelled(true);
+                        }
+                    }
+                }
+                        break;
+            case NONE:
+
+                break;
+
+            case VANILLA:
+                if(this.target != null && isHoldingSword()) {
+                    mc.thePlayer().setItemInUse(mc.thePlayer().getHeldItem(), 32767);
+                }
+                break;
+                    }
+        };
 
     @EventLink(EventBusPriorities.LOWEST)
     public final Listener<UpdatePositionEvent> onUpdatePositionEvent = event -> {
@@ -109,16 +137,13 @@ public final class KillAura extends Module {
             this.entityInBlockRange = false;
             EntityLivingBase optimalTarget = null;
 
-            final List<EntityLivingBase> entities = Wrapper.getLivingEntities(this::isValid);
+            final List<EntityLivingBase> entities = mc.getLivingEntities(this::isValid);
 
             if (entities.size() > 1)
                 entities.sort(this.sortingMethodProperty.getValue().getSorter());
 
             for (EntityLivingBase entity : entities) {
                 final double dist = this.computeData(entity).dist;
-
-                if (!this.entityInBlockRange && dist < this.blockRangeProperty.getValue())
-                    this.entityInBlockRange = true;
 
                 if (dist < this.rangeProperty.getValue()) {
                     optimalTarget = entity;
@@ -132,16 +157,29 @@ public final class KillAura extends Module {
                 return;
 
             if (optimalTarget != null) {
-                if (Wrapper.getTimer().timerSpeed > 1.0F)
-                    Wrapper.getTimer().timerSpeed = 1.0F;
+                if (mc.getTimer().timerSpeed > 1.0F)
+                    mc.getTimer().timerSpeed = 1.0F;
 
 
                 RotationUtils.rotate(event, this.computeData(optimalTarget).rotations,
                         this.maxAngleChangeProperty.getValue().floatValue(), this.lockViewProperty.getValue());
 
-                if (this.attackMethodProperty.getValue() == AttackMethod.PRE)
+                if (this.attackMethodProperty.getValue() == AttackMethod.PRE) {
                     tryAttack(event);
+                }
             }
+
+            if(autoblockProperty.getValue().equals(AutoblockMode.WATCHDOG)) {
+
+                if (BPH.playerSlot != mc.thePlayer().inventory.currentItem % 8 + 1) {
+                    mc.thePlayer().sendQueue.sendPacket(new C09PacketHeldItemChange(BPH.playerSlot = mc.thePlayer().inventory.currentItem % 8 + 1));
+                    swapped = true;
+                }
+                if (BPH.delayAttack) {
+                    return;
+                }
+            }
+
         } else {
             if (isOccupied())
                 return;
@@ -149,11 +187,15 @@ public final class KillAura extends Module {
             if (this.target != null && this.attackMethodProperty.getValue() == AttackMethod.POST)
                 tryAttack(event);
 
-            if (this.entityInBlockRange && this.autoblockProperty.getValue() && isHoldingSword()) {
-                Wrapper.getPlayerController().sendUseItem(Wrapper.getPlayer(), Wrapper.getWorld(),
-                        Wrapper.getPlayer().getCurrentEquippedItem(), BLOCK_PACKET);
-            }
         }
+
+            if(autoblockProperty.getValue().equals(AutoblockMode.WATCHDOG)) {
+            if (BPH.playerSlot != mc.thePlayer().inventory.currentItem) {
+                mc.thePlayer().sendQueue.sendPacket(new C09PacketHeldItemChange(BPH.playerSlot = mc.thePlayer().inventory.currentItem));
+                swapped = false;
+                 }
+            }
+
     };
 
     public KillAura() {
@@ -161,7 +203,7 @@ public final class KillAura extends Module {
     }
 
     private static double getDistToEntity(final double x, final double y, final double z) {
-        final EntityPlayer localPlayer = Wrapper.getPlayer();
+        final EntityPlayer localPlayer = mc.thePlayer();
         final double xDif = x - localPlayer.posX;
         final double yDif = y - localPlayer.posY;
         final double zDif = z - localPlayer.posZ;
@@ -170,7 +212,7 @@ public final class KillAura extends Module {
 
     public static boolean isAutoBlocking() {
         final KillAura aura = getInstance();
-        return aura.isEnabled() && aura.autoblockProperty.getValue() && aura.entityInBlockRange;
+        return aura.isEnabled() && aura.entityInBlockRange;
     }
 
     public static KillAura getInstance() {
@@ -188,7 +230,7 @@ public final class KillAura extends Module {
         if (isUsingItem())
             return;
 
-        final EntityPlayer localPlayer = Wrapper.getPlayer();
+        final EntityPlayer localPlayer = mc.thePlayer();
 
         int min = this.minApsProperty.getValue().intValue();
         int max = this.maxApsProperty.getValue().intValue();
@@ -204,11 +246,11 @@ public final class KillAura extends Module {
 
         if (attackTimer.hasElapsed(1000L / cps) && isLookingAtEntity(event.getYaw(), event.getPitch())) {
             localPlayer.swingItem();
-            Wrapper.sendPacket(new C02PacketUseEntity(this.target, C02PacketUseEntity.Action.ATTACK));
+            mc.sendPacket(new C02PacketUseEntity(this.target, C02PacketUseEntity.Action.ATTACK));
 
             if (this.duraProperty.getValue()) {
                 InventoryUtils.windowClick(36, 8, InventoryUtils.ClickType.SWAP_WITH_HOT_BAR_SLOT);
-                Wrapper.sendPacket(new C02PacketUseEntity(this.target, C02PacketUseEntity.Action.ATTACK));
+                mc.sendPacket(new C02PacketUseEntity(this.target, C02PacketUseEntity.Action.ATTACK));
                 InventoryUtils.windowClick(44, 0, InventoryUtils.ClickType.SWAP_WITH_HOT_BAR_SLOT);
             }
 
@@ -218,16 +260,16 @@ public final class KillAura extends Module {
                 localPlayer.setSprinting(false);
             }
         } else if (this.forceUpdateProperty.getValue() && event.isOnGround()) {
-            Wrapper.sendPacketDirect(new C03PacketPlayer(true));
+            mc.sendPacketDirect(new C03PacketPlayer(true));
         }
     }
 
     private boolean isLookingAtEntity(final float yaw, final float pitch) {
         final double range = this.rangeProperty.getValue();
-        final Vec3 src = Wrapper.getPlayer().getPositionEyes(1.0F);
+        final Vec3 src = mc.thePlayer().getPositionEyes(1.0F);
         final Vec3 rotationVec = Entity.getVectorForRotation(pitch, yaw);
         final Vec3 dest = src.addVector(rotationVec.xCoord * range, rotationVec.yCoord * range, rotationVec.zCoord * range);
-        final MovingObjectPosition obj = Wrapper.getWorld().rayTraceBlocks(src, dest,
+        final MovingObjectPosition obj = mc.getWorld().rayTraceBlocks(src, dest,
                 false, false, true);
         if (obj == null) return false;
         if (obj.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
@@ -248,7 +290,7 @@ public final class KillAura extends Module {
 
     private boolean fovCheck(EntityLivingBase entity, int fov) {
         final float[] rotations = this.computeData(entity).rotations;
-        final EntityPlayer player = Wrapper.getPlayer();
+        final EntityPlayer player = mc.thePlayer();
         final float yawChange = MathHelper.wrapAngleTo180_float(player.rotationYaw - rotations[0]);
         final float pitchChange = MathHelper.wrapAngleTo180_float(player.rotationPitch - rotations[1]);
         return Math.sqrt(yawChange * yawChange + pitchChange * pitchChange) < fov;
@@ -269,7 +311,7 @@ public final class KillAura extends Module {
     }
 
     private boolean isInMenu() {
-        return Wrapper.getCurrentScreen() != null;
+        return mc.getCurrentScreen() != null;
     }
 
     private boolean isOccupied() {
@@ -289,12 +331,12 @@ public final class KillAura extends Module {
     }
 
     private boolean isUsingItem() {
-        return Wrapper.getPlayer().isUsingItem() && !isHoldingSword();
+        return mc.thePlayer().isUsingItem() && !isHoldingSword();
     }
 
     private boolean isHoldingSword() {
         final ItemStack stack;
-        return (stack = Wrapper.getPlayer().getCurrentEquippedItem()) != null && stack.getItem() instanceof ItemSword;
+        return (stack = mc.thePlayer().getCurrentEquippedItem()) != null && stack.getItem() instanceof ItemSword;
     }
 
     private boolean isValid(EntityLivingBase entity) {
@@ -302,7 +344,7 @@ public final class KillAura extends Module {
             return false;
         if (entity.isInvisible() && !this.targetsProperty.isSelected(Targets.INVISIBLES))
             return false;
-        if (entity == Wrapper.getPlayer().ridingEntity)
+        if (entity == mc.thePlayer().ridingEntity)
             return false;
         if (entity instanceof EntityOtherPlayerMP) {
             final EntityPlayer player = (EntityPlayer) entity;
@@ -327,12 +369,19 @@ public final class KillAura extends Module {
         }
 
         return this.computeData(entity).dist <
-                Math.max(this.blockRangeProperty.getValue(), this.rangeProperty.getValue()) &&
+                this.rangeProperty.getValue() &&
                 (!this.checksProperty.isSelected(Checks.FOV) || this.fovCheck(entity, this.fovProperty.getValue().intValue()));
     }
 
     private enum AuraMode {
         PRIORITY
+    }
+
+    private enum AutoblockMode {
+        FAKE,
+        WATCHDOG,
+        VANILLA,
+        NONE
     }
 
     private enum AttackMethod {
@@ -406,14 +455,14 @@ public final class KillAura extends Module {
     private static class AngleSorting extends AngleBasedSorting {
         @Override
         protected float getCurrentAngle() {
-            return Wrapper.getPlayer().currentEvent.getYaw();
+            return mc.thePlayer().currentEvent.getYaw();
         }
     }
 
     private static class CrosshairSorting extends AngleBasedSorting {
         @Override
         protected float getCurrentAngle() {
-            return Wrapper.getPlayer().rotationYaw;
+            return mc.thePlayer().rotationYaw;
         }
     }
 

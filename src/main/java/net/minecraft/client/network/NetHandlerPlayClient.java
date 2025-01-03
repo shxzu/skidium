@@ -71,7 +71,7 @@ import vip.radium.event.impl.entity.SpawnParticleEntityEvent;
 import vip.radium.event.impl.packet.DisconnectEvent;
 import vip.radium.event.impl.packet.PacketSendEvent;
 import vip.radium.event.impl.render.DisplayTitleEvent;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 import java.io.File;
 import java.io.IOException;
@@ -1659,7 +1659,7 @@ public class NetHandlerPlayClient implements INetHandlerPlayClient {
                 if (!isLevelProtocol || !url.contains("..") && url.endsWith("/resources.zip")) {
                     return true;
                 } else {
-                    Wrapper.addChatMessage(EnumChatFormatting.RED.toString() + EnumChatFormatting.BOLD + "Cancelled malicious resource download!");
+                    mc.addChatMessage(EnumChatFormatting.RED.toString() + EnumChatFormatting.BOLD + "Cancelled malicious resource download!");
                     return false;
                 }
             }

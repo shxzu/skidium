@@ -24,7 +24,7 @@ import vip.radium.property.Property;
 import vip.radium.property.impl.DoubleProperty;
 import vip.radium.property.impl.EnumProperty;
 import vip.radium.utils.StringUtils;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 import vip.radium.utils.render.Colors;
 import vip.radium.utils.render.LockedResolution;
 import vip.radium.utils.render.RenderingUtils;
@@ -120,7 +120,7 @@ public final class Hud extends Module {
     public final Listener<UpdatePositionEvent> onUpdatePositionEvent = event -> {
         if (event.isPre()) {
             if (bpsProperty.getValue()) {
-                EntityPlayerSP player = Wrapper.getPlayer();
+                EntityPlayerSP player = mc.thePlayer();
 
                 double xDist = player.posX - player.lastTickPosX;
                 double zDist = player.posZ - player.lastTickPosZ;
@@ -170,9 +170,9 @@ public final class Hud extends Module {
 
         if (coordsProperty.getValue()) {
             final String coords = String.format("X: \2477%.0f \247FY: \2477%.1f \247FZ: \2477%.0f",
-                    Wrapper.getPlayer().posX,
-                    Wrapper.getPlayer().posY,
-                    Wrapper.getPlayer().posZ);
+                    mc.thePlayer().posX,
+                    mc.thePlayer().posY,
+                    mc.thePlayer().posZ);
 
 
             fontRenderer.drawStringWithShadow(coords, screenX - 2 - fontRenderer.getWidth(coords), potionY, -1);
@@ -195,7 +195,7 @@ public final class Hud extends Module {
         }
 
         if (potionsProperty.getValue()) {
-            for (PotionEffect effect : Wrapper.getPlayer().getActivePotionEffects()) {
+            for (PotionEffect effect : mc.thePlayer().getActivePotionEffects()) {
                 Potion potion = Potion.potionTypes[effect.getPotionID()];
                 String effectName = I18n.format(
                         potion.getName()) + " " +
@@ -222,9 +222,9 @@ public final class Hud extends Module {
 
         if (bpsProperty.getValue())
             fontRenderer.drawStringWithShadow(
-                    String.format("%.2f blocks/s", lastDist * 20 * Wrapper.getTimer().timerSpeed),
+                    String.format("%.2f blocks/s", lastDist * 20 * mc.getTimer().timerSpeed),
                     2,
-                    screenY - (Wrapper.getCurrentScreen() instanceof GuiChat ? 24 : 11),
+                    screenY - (mc.getCurrentScreen() instanceof GuiChat ? 24 : 11),
                     -1);
 
         long currentMillis = -1;
@@ -465,7 +465,7 @@ public final class Hud extends Module {
     private FontRenderer getFontRenderer() {
         return cFontProperty.getValue() ?
                 FontManager.FR :
-                Wrapper.getMinecraftFontRenderer();
+                mc.getMinecraftFontRenderer();
     }
 
     private enum ColorMode {

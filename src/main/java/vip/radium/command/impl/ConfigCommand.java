@@ -6,7 +6,7 @@ import vip.radium.command.CommandExecutionException;
 import vip.radium.config.Config;
 import vip.radium.notification.Notification;
 import vip.radium.notification.NotificationType;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 public final class ConfigCommand implements Command {
     @Override
@@ -41,9 +41,9 @@ public final class ConfigCommand implements Command {
                         return;
                 }
             } else if (arguments.length == 2 && upperCaseFunction.equalsIgnoreCase("LIST")) {
-                Wrapper.addChatMessage("Available Configs:");
+                mc.addChatMessage("Available Configs:");
                 for (Config config : RadiumClient.getInstance().getConfigManager().getElements())
-                    Wrapper.addChatMessage(config.getName());
+                    mc.addChatMessage(config.getName());
                 return;
             }
         }

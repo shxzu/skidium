@@ -10,7 +10,7 @@ import net.minecraft.network.play.client.C09PacketHeldItemChange;
 import net.minecraft.util.BlockPos;
 import vip.radium.RadiumClient;
 import vip.radium.event.EventBusPriorities;
-import vip.radium.event.impl.player.MoveEntityEvent;
+import vip.radium.event.impl.player.MoveEvent;
 import vip.radium.event.impl.player.StepEvent;
 import vip.radium.event.impl.player.UpdatePositionEvent;
 import vip.radium.module.Module;
@@ -26,7 +26,7 @@ import vip.radium.property.impl.EnumProperty;
 import vip.radium.utils.MovementUtils;
 import vip.radium.utils.ServerUtils;
 import vip.radium.utils.TimerUtil;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 @ModuleInfo(label = "Flight", category = ModuleCategory.MOVEMENT)
 public final class Flight extends Module {
@@ -61,7 +61,7 @@ public final class Flight extends Module {
     public final Listener<StepEvent> onStepEvent = event -> event.setStepHeight(0.0F);
 
     @EventLink(EventBusPriorities.HIGHEST)
-    public final Listener<MoveEntityEvent> MoveEntityEvent = e -> {
+    public final Listener<MoveEvent> MoveEntityEvent = e -> {
         switch (flightModeProperty.getValue()) {
             case MOTION:
                 if (pearlFlyProperty.getValue() && !hasLanded) {
@@ -100,10 +100,10 @@ public final class Flight extends Module {
                         final double dist = MovementUtils.estimateDistFromGround(MAX_ENDER_PEARL_SCAN_DIST);
 
                         if (dist < MAX_ENDER_PEARL_SCAN_DIST) {
-                            final boolean needSwitch = Wrapper.getPlayer().inventory.currentItem != pearlStackSlot;
+                            final boolean needSwitch = mc.thePlayer().inventory.currentItem != pearlStackSlot;
 
                             if (needSwitch)
-                                Wrapper.sendPacketDirect(new C09PacketHeldItemChange(pearlStackSlot));
+                                mc.sendPacketDirect(new C09PacketHeldItemChange(pearlStackSlot));
 
                             distWhenThrown = dist;
                             pearlSlot = pearlStackSlot;
@@ -117,10 +117,10 @@ public final class Flight extends Module {
                         }
 
                         estimatedTimeUntilLanded = (long) (((distWhenThrown / 20) / 1.5) * 1000);
-                        Wrapper.sendPacketDirect(BLOCK_PLACEMENT);
-                        final int physicalHeldItem = Wrapper.getPlayer().inventory.currentItem;
+                        mc.sendPacketDirect(BLOCK_PLACEMENT);
+                        final int physicalHeldItem = mc.thePlayer().inventory.currentItem;
                         if (pearlSlot != physicalHeldItem)
-                            Wrapper.sendPacketDirect(new C09PacketHeldItemChange(physicalHeldItem));
+                            mc.sendPacketDirect(new C09PacketHeldItemChange(physicalHeldItem));
                         isThrowing = false;
                         pearlAirBourne = true;
                         disabledTimer.reset();
@@ -139,19 +139,19 @@ public final class Flight extends Module {
                 }
             }
 
-            final EntityPlayerSP player = Wrapper.getPlayer();
+            final EntityPlayerSP player = mc.thePlayer();
 
             if (viewBobbingProperty.getValue())
                 player.cameraYaw = 0.105F;
 
             switch (flightModeProperty.getValue()) {
                 case MOTION:
-                    if (Wrapper.getGameSettings().keyBindJump.isKeyDown()) {
+                    if (mc.getGameSettings().keyBindJump.isKeyDown()) {
                         player.motionY = 1.0F;
-                    } else if (Wrapper.getGameSettings().keyBindSneak.isKeyDown()) {
+                    } else if (mc.getGameSettings().keyBindSneak.isKeyDown()) {
                         player.motionY = -1.0F;
                     } else {
-                        Wrapper.getPlayer().motionY = 0.0D;
+                        mc.thePlayer().motionY = 0.0D;
                     }
                     break;
             }
@@ -182,7 +182,7 @@ public final class Flight extends Module {
 
     private int findPearlsInHotBar() {
         for (int i = 36; i < 45; i++) {
-            ItemStack stack = Wrapper.getStackInSlot(i);
+            ItemStack stack = mc.getStackInSlot(i);
 
             if (stack != null && stack.getItem() instanceof ItemEnderPearl)
                 return i - 36;
@@ -194,7 +194,7 @@ public final class Flight extends Module {
     @Override
     public void onDisable() {
         Step.cancelStep = false;
-        Wrapper.getTimer().timerSpeed = 1.0F;
+        mc.getTimer().timerSpeed = 1.0F;
 
         if (toggleAuraProperty.getValue() && (killauraWasEnabled && !aura.isEnabled()))
             aura.toggle();

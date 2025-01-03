@@ -15,7 +15,7 @@ import vip.radium.module.ModuleInfo;
 import vip.radium.module.impl.combat.KillAura;
 import vip.radium.property.Property;
 import vip.radium.utils.InventoryUtils;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 @ModuleInfo(label = "Auto Tool", category = ModuleCategory.PLAYER)
 public final class AutoTool extends Module {
@@ -26,17 +26,17 @@ public final class AutoTool extends Module {
     public final Listener<UpdatePositionEvent> onUpdatePositionEvent = event -> {
         if (event.isPre()) {
             MovingObjectPosition objectMouseOver;
-            if ((objectMouseOver = Wrapper.getMinecraft().objectMouseOver) != null &&
-                    Wrapper.getGameSettings().keyBindAttack.isKeyDown()) {
+            if ((objectMouseOver = mc.getMinecraft().objectMouseOver) != null &&
+                    mc.getGameSettings().keyBindAttack.isKeyDown()) {
                 BlockPos blockPos;
                 if (objectMouseOver.entityHit != null)
                     doSwordSwap();
                 else if ((blockPos = objectMouseOver.getBlockPos()) != null) {
-                    Block block = Wrapper.getWorld().getBlockState(blockPos).getBlock();
+                    Block block = mc.getWorld().getBlockState(blockPos).getBlock();
                     float strongestToolStr = 1.0F;
                     int strongestToolSlot = -1;
                     for (int i = 36; i < 45; i++) {
-                        ItemStack stack = Wrapper.getStackInSlot(i);
+                        ItemStack stack = mc.getStackInSlot(i);
 
                         if (stack != null && stack.getItem() instanceof ItemTool) {
                             float strVsBlock = stack.getStrVsBlock(block);
@@ -48,7 +48,7 @@ public final class AutoTool extends Module {
                     }
 
                     if (strongestToolSlot != -1)
-                        Wrapper.getPlayer().inventory.currentItem = strongestToolSlot - 36;
+                        mc.thePlayer().inventory.currentItem = strongestToolSlot - 36;
                 }
             } else if (KillAura.getInstance().getTarget() != null)
                 doSwordSwap();
@@ -62,7 +62,7 @@ public final class AutoTool extends Module {
         double damage = 1.0;
         int slot = -1;
         for (int i = 36; i < 45; i++) {
-            ItemStack stack = Wrapper.getStackInSlot(i);
+            ItemStack stack = mc.getStackInSlot(i);
 
             if (stack != null && stack.getItem() instanceof ItemSword) {
                 double damageVs = InventoryUtils.getItemDamage(stack);
@@ -74,6 +74,6 @@ public final class AutoTool extends Module {
         }
 
         if (slot != -1)
-            Wrapper.getPlayer().inventory.currentItem = slot - 36;
+            mc.thePlayer().inventory.currentItem = slot - 36;
     }
 }

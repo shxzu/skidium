@@ -2,7 +2,7 @@ package net.minecraft.util;
 
 import vip.radium.module.ModuleManager;
 import vip.radium.module.impl.player.InventoryMove;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.settings.GameSettings;
 import org.lwjgl.input.Keyboard;
@@ -19,7 +19,7 @@ public class MovementInputFromOptions extends MovementInput {
         this.moveForward = 0.0F;
 
         if (ModuleManager.getInstance(InventoryMove.class).isEnabled()) {
-            if (!(Wrapper.getCurrentScreen() instanceof GuiChat)) {
+            if (!(mc.getCurrentScreen() instanceof GuiChat)) {
                 if (Keyboard.isKeyDown(this.gameSettings.keyBindForward.getKeyCode())) {
                     ++this.moveForward;
                 }

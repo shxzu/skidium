@@ -10,7 +10,7 @@ import vip.radium.module.ModuleCategory;
 import vip.radium.module.ModuleInfo;
 import vip.radium.property.Property;
 import vip.radium.utils.MovementUtils;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 @ModuleInfo(label = "Step", category = ModuleCategory.MOVEMENT)
 public final class Step extends Module {
@@ -24,7 +24,7 @@ public final class Step extends Module {
 
     @Override
     public void onDisable() {
-        Wrapper.getTimer().timerSpeed = 1.0f;
+        mc.getTimer().timerSpeed = 1.0f;
     }
 
     @EventLink
@@ -35,10 +35,10 @@ public final class Step extends Module {
             } else {
                 double steppedHeight = e.getHeightStepped();
                 for (double offset : offsets) {
-                    Wrapper.sendPacketDirect(new C03PacketPlayer.C04PacketPlayerPosition(
-                        Wrapper.getPlayer().posX,
-                        Wrapper.getPlayer().posY + (offset * steppedHeight),
-                        Wrapper.getPlayer().posZ,
+                    mc.sendPacketDirect(new C03PacketPlayer.C04PacketPlayerPosition(
+                        mc.thePlayer().posX,
+                        mc.thePlayer().posY + (offset * steppedHeight),
+                        mc.thePlayer().posZ,
                         false));
                 }
                 timerWhenStepping = 1.0f / (offsets.length + 1);
@@ -53,11 +53,11 @@ public final class Step extends Module {
             if (cancelledPackets > 0) {
                 cancelMorePackets = false;
                 cancelledPackets = 0;
-                Wrapper.getTimer().timerSpeed = 1.0f;
+                mc.getTimer().timerSpeed = 1.0f;
             }
 
             if (cancelMorePackets) {
-                Wrapper.getTimer().timerSpeed = timerWhenStepping;
+                mc.getTimer().timerSpeed = timerWhenStepping;
                 cancelledPackets++;
             }
         }

@@ -4,7 +4,7 @@ import vip.radium.RadiumClient;
 import vip.radium.command.Command;
 import vip.radium.command.CommandExecutionException;
 import vip.radium.module.Module;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 public final class ToggleCommand implements Command {
     @Override
@@ -20,7 +20,7 @@ public final class ToggleCommand implements Command {
             for (Module module : RadiumClient.getInstance().getModuleManager().getModules()) {
                 if (module.getLabel().replaceAll(" ", "").equalsIgnoreCase(moduleName)) {
                     module.toggle();
-                    Wrapper.addChatMessage("'" + module.getLabel() + "' has been " + (module.isEnabled() ? "\247Aenabled\2477." : "\247Cdisabled\2477."));
+                    mc.addChatMessage("'" + module.getLabel() + "' has been " + (module.isEnabled() ? "\247Aenabled\2477." : "\247Cdisabled\2477."));
                     return;
                 }
             }

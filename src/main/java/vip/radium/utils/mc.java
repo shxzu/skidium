@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
-public final class Wrapper {
+public final class mc {
 
     public static EntityRenderer getEntityRenderer() {
         return getMinecraft().entityRenderer;
@@ -33,7 +33,7 @@ public final class Wrapper {
         return Minecraft.getMinecraft();
     }
 
-    public static EntityPlayerSP getPlayer() {
+    public static EntityPlayerSP thePlayer() {
         return getMinecraft().thePlayer;
     }
 
@@ -62,7 +62,7 @@ public final class Wrapper {
     }
 
     public static ItemStack getStackInSlot(int index) {
-        return getPlayer().inventoryContainer.getSlot(index).getStack();
+        return thePlayer().inventoryContainer.getSlot(index).getStack();
     }
 
     public static Timer getTimer() {
@@ -74,7 +74,7 @@ public final class Wrapper {
     }
 
     public static void addChatMessage(String message) {
-        getPlayer().addChatMessage(new ChatComponentText("\2478[\247CR\2478]\2477 " + message));
+        thePlayer().addChatMessage(new ChatComponentText("\2478[\247CR\2478]\2477 " + message));
     }
 
     public static GuiScreen getCurrentScreen() {

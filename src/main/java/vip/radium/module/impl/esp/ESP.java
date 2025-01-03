@@ -26,7 +26,7 @@ import vip.radium.property.impl.DoubleProperty;
 import vip.radium.property.impl.EnumProperty;
 import vip.radium.property.impl.MultiSelectEnumProperty;
 import vip.radium.utils.PlayerUtils;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 import vip.radium.utils.render.Colors;
 import vip.radium.utils.render.OGLUtils;
 import vip.radium.utils.render.RenderingUtils;
@@ -135,7 +135,7 @@ public final class ESP extends Module {
         final boolean armorBar = armorBarProperty.getValue();
 
         for (EntityPlayer player : entityPosMap.keySet()) {
-            if ((player.getDistanceToEntity(Wrapper.getPlayer()) < 1.0F && Wrapper.isInFirstPerson()) ||
+            if ((player.getDistanceToEntity(mc.thePlayer()) < 1.0F && mc.isInFirstPerson()) ||
                     !RenderingUtils.isBBInFrustum(player.getEntityBoundingBox()))
                 continue;
 
@@ -413,7 +413,7 @@ public final class ESP extends Module {
 
         final float partialTicks = e.getPartialTicks();
 
-        for (final EntityPlayer player : Wrapper.getLoadedPlayers()) {
+        for (final EntityPlayer player : mc.getLoadedPlayers()) {
             if (!isValid(player))
                 continue;
             if (project2D) {
@@ -474,7 +474,7 @@ public final class ESP extends Module {
         if (event.isPre()) {
             final Map<EntityPlayer, Relationship> relationshipMap = espInst.playerRelationshipMap;
 
-            for (EntityPlayer player : Wrapper.getLoadedPlayers()) {
+            for (EntityPlayer player : mc.getLoadedPlayers()) {
                 Relationship relationship = relationshipMap.get(player);
 
                 if (relationship != null) {
@@ -519,7 +519,7 @@ public final class ESP extends Module {
                 return false;
             }
 
-            if (player instanceof EntityPlayerSP && (Wrapper.isInFirstPerson() || !espInst.targetsProperty.isSelected(Targets.SELF))) {
+            if (player instanceof EntityPlayerSP && (mc.isInFirstPerson() || !espInst.targetsProperty.isSelected(Targets.SELF))) {
                 return false;
             }
 
@@ -557,7 +557,7 @@ public final class ESP extends Module {
                 relationshipMap.put(player, new Relationship(teammate, friend));
             }
 
-            return RenderingUtils.isBBInFrustum(entity.getEntityBoundingBox()) && Wrapper.getLoadedPlayers().contains(player);
+            return RenderingUtils.isBBInFrustum(entity.getEntityBoundingBox()) && mc.getLoadedPlayers().contains(player);
         }
 
         return false;

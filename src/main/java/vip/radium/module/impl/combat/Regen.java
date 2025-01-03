@@ -9,7 +9,7 @@ import vip.radium.module.ModuleCategory;
 import vip.radium.module.ModuleInfo;
 import vip.radium.property.impl.DoubleProperty;
 import vip.radium.utils.MovementUtils;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 @ModuleInfo(label = "Regen", category = ModuleCategory.COMBAT)
 public final class Regen extends Module {
@@ -18,8 +18,8 @@ public final class Regen extends Module {
 
     @EventLink
     public final Listener<UpdatePositionEvent> onUpdatePositionEvent = event -> {
-        if (event.isPre() && MovementUtils.isOnGround() && Wrapper.getPlayer().getHealth() < Wrapper.getPlayer().getMaxHealth())
+        if (event.isPre() && MovementUtils.isOnGround() && mc.thePlayer().getHealth() < mc.thePlayer().getMaxHealth())
             for (int i = 0; i < packetsProperty.getValue().intValue(); i++)
-                Wrapper.sendPacketDirect(new C03PacketPlayer(true));
+                mc.sendPacketDirect(new C03PacketPlayer(true));
     };
 }

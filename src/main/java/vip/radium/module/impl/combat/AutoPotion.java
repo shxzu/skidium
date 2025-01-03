@@ -14,7 +14,7 @@ import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.BlockPos;
 import vip.radium.event.EventBusPriorities;
-import vip.radium.event.impl.player.MoveEntityEvent;
+import vip.radium.event.impl.player.MoveEvent;
 import vip.radium.event.impl.player.UpdatePositionEvent;
 import vip.radium.event.impl.player.WindowClickEvent;
 import vip.radium.module.Module;
@@ -28,7 +28,7 @@ import vip.radium.property.impl.Representation;
 import vip.radium.utils.InventoryUtils;
 import vip.radium.utils.MovementUtils;
 import vip.radium.utils.TimerUtil;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 import java.util.List;
 
@@ -72,7 +72,7 @@ public final class AutoPotion extends Module {
             event -> interactionTimer.reset();
 
     @EventLink(EventBusPriorities.HIGHEST)
-    public final Listener<MoveEntityEvent> onMoveEntityEvent = event -> {
+    public final Listener<MoveEvent> moveEventListener = event -> {
         if (jump && jumpTicks >= 0) {
             event.setX(0.0D);
             event.setZ(0.0D);
@@ -98,7 +98,7 @@ public final class AutoPotion extends Module {
                 if (interactionTimer.hasElapsed(delayProperty.getValue().longValue())) {
                     float health = healthProperty.getValue().floatValue() * 2.0F;
                     for (int slot = InventoryUtils.EXCLUDE_ARMOR_BEGIN; slot < InventoryUtils.END; slot++) {
-                        ItemStack stack = Wrapper.getStackInSlot(slot);
+                        ItemStack stack = mc.getStackInSlot(slot);
                         if (stack != null && stack.getItem() instanceof ItemPotion &&
                                 ItemPotion.isSplash(stack.getMetadata()) && InventoryUtils.isBuffPotion(stack)) {
                             ItemPotion itemPotion = (ItemPotion) stack.getItem();
@@ -124,7 +124,7 @@ public final class AutoPotion extends Module {
                                 if (MovementUtils.isOverVoid())
                                     return;
 
-                                if (Wrapper.getMinecraft().currentScreen != null)
+                                if (mc.getMinecraft().currentScreen != null)
                                     return;
 
                                 if (distanceCheckProperty.getValue()) {
@@ -132,10 +132,10 @@ public final class AutoPotion extends Module {
                                         return;
                                 }
 
-                                prevSlot = Wrapper.getPlayer().inventory.currentItem;
+                                prevSlot = mc.thePlayer().inventory.currentItem;
 
-                                double xDist = Wrapper.getPlayer().posX - Wrapper.getPlayer().lastTickPosX;
-                                double zDist = Wrapper.getPlayer().posZ - Wrapper.getPlayer().lastTickPosZ;
+                                double xDist = mc.thePlayer().posX - mc.thePlayer().lastTickPosX;
+                                double zDist = mc.thePlayer().posZ - mc.thePlayer().lastTickPosZ;
 
                                 double speed = StrictMath.sqrt(xDist * xDist + zDist * zDist);
 
@@ -145,10 +145,10 @@ public final class AutoPotion extends Module {
                                 boolean jumpOnly = jumpOnlyProperty.getValue();
 
                                 if ((shouldJump || jumpOnly) && onGround && !MovementUtils.isBlockAbove() && MovementUtils.getJumpBoostModifier() == 0) {
-                                    Wrapper.getPlayer().motionX = 0.0D;
-                                    Wrapper.getPlayer().motionZ = 0.0D;
+                                    mc.thePlayer().motionX = 0.0D;
+                                    mc.thePlayer().motionZ = 0.0D;
                                     event.setPitch(-90.0F);
-                                    Wrapper.getPlayer().jump();
+                                    mc.thePlayer().jump();
                                     jump = true;
                                     jumpTicks = 9;
                                 } else if ((shouldPredict || onGround) && !jumpOnly) {
@@ -166,7 +166,7 @@ public final class AutoPotion extends Module {
                                             InventoryUtils.ClickType.SWAP_WITH_HOT_BAR_SLOT);
                                     potSlot = potionSlot;
                                 }
-                                Wrapper.sendPacketDirect(new C09PacketHeldItemChange(potSlot));
+                                mc.sendPacketDirect(new C09PacketHeldItemChange(potSlot));
                                 potting = true;
                                 return;
                             }
@@ -174,8 +174,8 @@ public final class AutoPotion extends Module {
                     }
                 }
             } else if (potting && prevSlot != -1) {
-                Wrapper.sendPacketDirect(THROW_POTION_PACKET);
-                Wrapper.sendPacketDirect(new C09PacketHeldItemChange(prevSlot));
+                mc.sendPacketDirect(THROW_POTION_PACKET);
+                mc.sendPacketDirect(new C09PacketHeldItemChange(prevSlot));
                 interactionTimer.reset();
                 prevSlot = -1;
                 potting = false;
@@ -187,10 +187,10 @@ public final class AutoPotion extends Module {
             if (event.isPre()) {
                 if (interactionTimer.hasElapsed(delayProperty.getValue().longValue()) &&
                         !ModuleManager.getInstance(Scaffold.class).isEnabled() &&
-                        Wrapper.getPlayer().getHealth() <= healthProperty.getValue() * 2) {
+                        mc.thePlayer().getHealth() <= healthProperty.getValue() * 2) {
 
                     for (int i = 0; i < 45; i++) {
-                        ItemStack stack = Wrapper.getStackInSlot(i);
+                        ItemStack stack = mc.getStackInSlot(i);
 
                         if (stack != null && stack.getItem() instanceof ItemSkull && stack.getDisplayName().contains("Golden")) {
                             final int headSlot;
@@ -203,10 +203,10 @@ public final class AutoPotion extends Module {
                                         InventoryUtils.ClickType.SWAP_WITH_HOT_BAR_SLOT);
                                 headSlot = desiredSlot;
                             }
-                            int oldSlot = Wrapper.getPlayer().inventory.currentItem;
-                            Wrapper.sendPacketDirect(new C09PacketHeldItemChange(headSlot));
-                            Wrapper.sendPacketDirect(THROW_POTION_PACKET);
-                            Wrapper.sendPacketDirect(new C09PacketHeldItemChange(oldSlot));
+                            int oldSlot = mc.thePlayer().inventory.currentItem;
+                            mc.sendPacketDirect(new C09PacketHeldItemChange(headSlot));
+                            mc.sendPacketDirect(THROW_POTION_PACKET);
+                            mc.sendPacketDirect(new C09PacketHeldItemChange(oldSlot));
                             interactionTimer.reset();
                             return;
                         }
@@ -221,7 +221,7 @@ public final class AutoPotion extends Module {
         ItemStack bestStack = null;
 
         for (int i = InventoryUtils.EXCLUDE_ARMOR_BEGIN; i < InventoryUtils.END; i++) {
-            ItemStack stackInSlot = Wrapper.getStackInSlot(i);
+            ItemStack stackInSlot = mc.getStackInSlot(i);
 
             if (stackInSlot != null && stackInSlot.getItem() instanceof ItemPotion) {
                 ItemPotion itemPotion = (ItemPotion) stackInSlot.getItem();
@@ -239,13 +239,13 @@ public final class AutoPotion extends Module {
     }
 
     public boolean isPlayerInRange(double distance) {
-        Entity player = Wrapper.getPlayer();
+        Entity player = mc.thePlayer();
 
         double x = player.posX;
         double y = player.posY;
         double z = player.posZ;
 
-        for (EntityPlayer entity : Wrapper.getLoadedPlayers()) {
+        for (EntityPlayer entity : mc.getLoadedPlayers()) {
             if (!entity.isSpectator() && entity instanceof EntityOtherPlayerMP) {
                 double d1 = entity.getDistanceSq(x, y, z);
 
@@ -277,7 +277,7 @@ public final class AutoPotion extends Module {
     private int getValidPotionsInInv() {
         int count = 0;
         for (int i = InventoryUtils.EXCLUDE_ARMOR_BEGIN; i < InventoryUtils.END; i++) {
-            ItemStack stack = Wrapper.getStackInSlot(i);
+            ItemStack stack = mc.getStackInSlot(i);
 
             if (stack != null && stack.getItem() instanceof ItemPotion &&
                     ItemPotion.isSplash(stack.getMetadata()) && InventoryUtils.isBuffPotion(stack)) {
@@ -340,14 +340,14 @@ public final class AutoPotion extends Module {
     private static class HealthBelowRequirement implements Requirement {
         @Override
         public boolean test(float healthTarget, int currentAmplifier, int potionId) {
-            return Wrapper.getPlayer().getHealth() < healthTarget;
+            return mc.thePlayer().getHealth() < healthTarget;
         }
     }
 
     private static class BetterThanCurrentRequirement implements Requirement {
         @Override
         public boolean test(float healthTarget, int currentAmplifier, int potionId) {
-            PotionEffect effect = Wrapper.getPlayer().getActivePotionEffect(potionId);
+            PotionEffect effect = mc.thePlayer().getActivePotionEffect(potionId);
             return effect == null || effect.getAmplifier() < currentAmplifier;
         }
     }

@@ -9,7 +9,7 @@ import vip.radium.module.ModuleCategory;
 import vip.radium.module.ModuleInfo;
 import vip.radium.property.impl.EnumProperty;
 import vip.radium.utils.MovementUtils;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -26,8 +26,8 @@ public final class NoFall extends Module {
         if (event.isPre()) {
             final double minFallDist = MovementUtils.getMinFallDist();
 
-            if (Wrapper.getPlayer().fallDistance >= minFallDist) {
-                noFallModeProperty.getValue().fallListener.onFall(event, Wrapper.getPlayer().fallDistance);
+            if (mc.thePlayer().fallDistance >= minFallDist) {
+                noFallModeProperty.getValue().fallListener.onFall(event, mc.thePlayer().fallDistance);
             }
         }
     };
@@ -38,7 +38,7 @@ public final class NoFall extends Module {
 
     private enum NoFallMode {
         EDIT((event, fallDist) -> event.setOnGround(true)),
-        PACKET((event, fallDist) -> Wrapper.sendPacketDirect(new C03PacketPlayer(true))),
+        PACKET((event, fallDist) -> mc.sendPacketDirect(new C03PacketPlayer(true))),
         WATCHDOG((event, fallDist) -> {
             if (MovementUtils.isOverVoid()) {
                 return;
@@ -67,7 +67,7 @@ public final class NoFall extends Module {
             if (yDif != 2 && yDif >= -0.05 && yDif < 0.0) {
                 event.setOnGround(true);
                 event.setPosY(basePosY + closest);
-                Wrapper.getPlayer().fallDistance = 0.0F;
+                mc.thePlayer().fallDistance = 0.0F;
             }
         });
 

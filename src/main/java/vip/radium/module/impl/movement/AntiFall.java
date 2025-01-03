@@ -13,7 +13,7 @@ import vip.radium.property.impl.EnumProperty;
 import vip.radium.property.impl.Representation;
 import vip.radium.utils.MovementUtils;
 import vip.radium.utils.TimerUtil;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 @ModuleInfo(label = "Anti Fall", category = ModuleCategory.MOVEMENT)
 public final class AntiFall extends Module {
@@ -32,13 +32,13 @@ public final class AntiFall extends Module {
     public final Listener<UpdatePositionEvent> onUpdatePositionEvent = event -> {
         if (event.isPre()) {
             if (!ModuleManager.getInstance(Flight.class).isEnabled() &&
-                    Wrapper.getPlayer().fallDistance > distProperty.getValue().floatValue() &&
+                    mc.thePlayer().fallDistance > distProperty.getValue().floatValue() &&
                     !MovementUtils.isOnGround() &&
                     timer.hasElapsed(500L) &&
                     MovementUtils.isOverVoid()) {
                 switch (noVoidModeProperty.getValue()) {
                     case PACKET:
-                        Wrapper.sendPacketDirect(
+                        mc.sendPacketDirect(
                                 new C03PacketPlayer.C06PacketPlayerPosLook(
                                         event.getPosX(),
                                         event.getPosY() + 11.0 + StrictMath.random(),
@@ -48,11 +48,11 @@ public final class AntiFall extends Module {
                                         false));
                         break;
                     case MOTION:
-                        if (Wrapper.getPlayer().motionY < 0.0F)
-                            Wrapper.getPlayer().motionY = 2.2F;
+                        if (mc.thePlayer().motionY < 0.0F)
+                            mc.thePlayer().motionY = 2.2F;
                         break;
                 }
-                Wrapper.getPlayer().fallDistance = 0.0f;
+                mc.thePlayer().fallDistance = 0.0f;
                 timer.reset();
             }
         }

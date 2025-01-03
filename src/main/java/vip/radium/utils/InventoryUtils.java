@@ -40,15 +40,15 @@ public final class InventoryUtils {
     }
 
     public static void openInventory() {
-        Wrapper.sendPacketDirect(new C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT));
+        mc.sendPacketDirect(new C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT));
     }
 
     public static void closeInventory() {
-        Wrapper.sendPacketDirect(new C0DPacketCloseWindow(Wrapper.getPlayer().inventoryContainer.windowId));
+        mc.sendPacketDirect(new C0DPacketCloseWindow(mc.thePlayer().inventoryContainer.windowId));
     }
 
     public static int getDepthStriderLevel() {
-        return EnchantmentHelper.getDepthStriderModifier(Wrapper.getPlayer());
+        return EnchantmentHelper.getDepthStriderModifier(mc.thePlayer());
     }
 
     /**
@@ -61,7 +61,7 @@ public final class InventoryUtils {
      * @param mode               The type of click
      */
     public static void windowClick(int windowId, int slotId, int mouseButtonClicked, ClickType mode) {
-        Wrapper.getPlayerController().windowClick(windowId, slotId, mouseButtonClicked, mode.ordinal(), Wrapper.getPlayer());
+        mc.getPlayerController().windowClick(windowId, slotId, mouseButtonClicked, mode.ordinal(), mc.thePlayer());
     }
 
     public static void equipArmor(int slot) {
@@ -73,8 +73,8 @@ public final class InventoryUtils {
     }
 
     public static void windowClick(int slotId, int mouseButtonClicked, ClickType mode) {
-        Wrapper.getPlayerController().windowClick(Wrapper.getPlayer().inventoryContainer.windowId, slotId,
-                mouseButtonClicked, mode.ordinal(), Wrapper.getPlayer());
+        mc.getPlayerController().windowClick(mc.thePlayer().inventoryContainer.windowId, slotId,
+                mouseButtonClicked, mode.ordinal(), mc.thePlayer());
     }
 
     public static double getDamageReduction(ItemStack stack) {
@@ -118,7 +118,7 @@ public final class InventoryUtils {
         ItemStack bestBow = null;
 
         for (int i = InventoryUtils.EXCLUDE_ARMOR_BEGIN; i < InventoryUtils.END; i++) {
-            final ItemStack stack = Wrapper.getStackInSlot(i);
+            final ItemStack stack = mc.getStackInSlot(i);
             if (stack != null && stack.getItem() instanceof ItemBow) {
                 double damage = getBowDamage(stack);
 
@@ -176,7 +176,7 @@ public final class InventoryUtils {
         ItemStack bestStack = null;
 
         for (int i = InventoryUtils.EXCLUDE_ARMOR_BEGIN; i < InventoryUtils.END; i++) {
-            final ItemStack stack = Wrapper.getStackInSlot(i);
+            final ItemStack stack = mc.getStackInSlot(i);
 
             if (stack != null && stack.getItem() instanceof ItemSword) {
                 double newDamage = getItemDamage(stack);
@@ -216,7 +216,7 @@ public final class InventoryUtils {
         Tool bestTool = new Tool(-1, -1, null);
 
         for (int i = InventoryUtils.EXCLUDE_ARMOR_BEGIN; i < InventoryUtils.END; i++) {
-            final ItemStack stack = Wrapper.getStackInSlot(i);
+            final ItemStack stack = mc.getStackInSlot(i);
 
             if (stack != null && stack.getItem() instanceof ItemTool && type == getToolType(stack)) {
                 double efficiency = getToolEfficiency(stack);
@@ -249,7 +249,7 @@ public final class InventoryUtils {
 
 
         for (int i = InventoryUtils.INCLUDE_ARMOR_BEGIN; i < InventoryUtils.END; i++) {
-            final ItemStack stack = Wrapper.getStackInSlot(i);
+            final ItemStack stack = mc.getStackInSlot(i);
 
             if (stack != null && stack.getItem() instanceof ItemArmor) {
                 ItemArmor stackArmor = (ItemArmor) stack.getItem();

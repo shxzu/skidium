@@ -21,10 +21,7 @@ import vip.radium.property.Property;
 import vip.radium.property.impl.DoubleProperty;
 import vip.radium.property.impl.MultiSelectEnumProperty;
 import vip.radium.property.impl.Representation;
-import vip.radium.utils.HypixelGameUtils;
-import vip.radium.utils.InventoryUtils;
-import vip.radium.utils.TimerUtil;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,133 +47,130 @@ public final class InventoryManager extends Module {
     private boolean openInventory;
 
     @EventLink
+    public final Listener<PacketReceiveEvent> packetReceiveEventListener = e -> {
+        if (e.getPacket() instanceof C16PacketClientStatus) {
+            C16PacketClientStatus packet = (C16PacketClientStatus) e.getPacket();
+            if (packet.getStatus().equals(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT)) {
+                openInventory = true;
+            }
+        }
+
+        if(e.getPacket() instanceof C0DPacketCloseWindow) {
+            C0DPacketCloseWindow packet = (C0DPacketCloseWindow) e.getPacket();
+            if(packet.getWindowId() == mc.thePlayer().inventoryContainer.windowId) {
+                openInventory = false;
+            }
+        }
+
+    };
+
+    @EventLink
     public final Listener<WindowClickEvent> onWindowClickEvent = event ->
             interactionsTimer.reset();
 
-    @EventLink
-    public final Listener<PacketSendEvent> onPacketSendEvent = event -> {
-        if (openInventory) {
-            if (event.getPacket() instanceof C16PacketClientStatus) {
-                C16PacketClientStatus packet = (C16PacketClientStatus) event.getPacket();
-                if (packet.getStatus() == C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT)
-                    event.setCancelled();
-            } else if (event.getPacket() instanceof C0DPacketCloseWindow) {
-                event.setCancelled();
-            }
-        }
-    };
-
-    @EventLink
-    public final Listener<PacketReceiveEvent> onPacketReceiveEvent = event -> {
-        if (openInventory) {
-            if (event.getPacket() instanceof S2DPacketOpenWindow) {
-                close();
-            } else if (event.getPacket() instanceof S2EPacketCloseWindow) {
-                event.setCancelled();
-            }
-        }
-    };
 
     @EventLink
     public final Listener<UpdatePositionEvent> onUpdatePositionEvent = event -> {
         if (event.isPre()) {
-            final GuiScreen currentScreen = Wrapper.getCurrentScreen();
-            if (currentScreen == null || currentScreen instanceof GuiInventory) {
-                final long clickDelay = this.clickDelayProperty.getValue().longValue();
+            final GuiScreen currentScreen = mc.getCurrentScreen();
+            if (isInventoryOpen() && (!MovementUtils.isMoving())) {
+                if ((currentScreen == null || (currentScreen instanceof GuiContainer && ((GuiContainer) currentScreen).inventorySlots == mc.thePlayer().inventoryContainer))) {
+                    final long clickDelay = this.clickDelayProperty.getValue().longValue();
 
-                if (!this.interactionsTimer.hasElapsed(clickDelay))
-                    return;
+                    if (!this.interactionsTimer.hasElapsed(clickDelay))
+                        return;
 
-                final boolean autoArmor = this.modulesProperty.isSelected(Modules.AUTO_ARMOR);
-                final boolean cleaner = this.modulesProperty.isSelected(Modules.CLEANER);
-                final boolean sorter = this.sortHotbarProperty.getValue();
+                    final boolean autoArmor = this.modulesProperty.isSelected(Modules.AUTO_ARMOR);
+                    final boolean cleaner = this.modulesProperty.isSelected(Modules.CLEANER);
+                    final boolean sorter = this.sortHotbarProperty.getValue();
 
-                this.clear();
+                    this.clear();
 
-                boolean foundSword = false;
+                    boolean foundSword = false;
 
-                for (int slot = InventoryUtils.INCLUDE_ARMOR_BEGIN; slot < InventoryUtils.END; slot++) {
-                    final ItemStack stack = Wrapper.getStackInSlot(slot);
+                    for (int slot = InventoryUtils.INCLUDE_ARMOR_BEGIN; slot < InventoryUtils.END; slot++) {
+                        final ItemStack stack = mc.getStackInSlot(slot);
 
-                    if (stack != null) {
-                        if (stack.getItem() instanceof ItemSword && InventoryUtils.isBestSword(stack)) {
-                            if (foundSword) {
+                        if (stack != null) {
+                            if (stack.getItem() instanceof ItemSword && InventoryUtils.isBestSword(stack)) {
+                                if (foundSword) {
+                                    this.trash.add(slot);
+                                } else if (slot != bestSwordSlot) {
+                                    foundSword = true;
+                                    this.bestSwordSlot = slot;
+                                }
+                            } else if (stack.getItem() instanceof ItemTool && InventoryUtils.isBestTool(stack)) {
+                                final int toolType = InventoryUtils.getToolType(stack);
+                                if (toolType != -1 && slot != this.bestToolSlots[toolType])
+                                    this.bestToolSlots[toolType] = slot;
+                            } else if (stack.getItem() instanceof ItemArmor && InventoryUtils.isBestArmor(stack)) {
+                                final ItemArmor armor = (ItemArmor) stack.getItem();
+
+                                final int pieceSlot = this.bestArmorPieces[armor.armorType];
+
+                                if (pieceSlot == -1 || slot != pieceSlot)
+                                    this.bestArmorPieces[armor.armorType] = slot;
+                            } else if (stack.getItem() instanceof ItemBow && this.archeryProperty.getValue() && InventoryUtils.isBestBow(stack)) {
+                                if (slot != bestBowSlot)
+                                    this.bestBowSlot = slot;
+                            } else if (stack.getItem() instanceof ItemAppleGold)
+                                this.gappleStackSlots.add(slot);
+                            else if (!this.trash.contains(slot) && !isValidStack(stack, this.archeryProperty.getValue()))
                                 this.trash.add(slot);
-                            } else if (slot != bestSwordSlot) {
-                                foundSword = true;
-                                this.bestSwordSlot = slot;
+                        }
+                    }
+
+                    if (autoArmor && this.equipArmor())
+                        return;
+
+                    if (cleaner && this.dropItem(this.trash))
+                        return;
+
+                    if (sorter) {
+                        int currentSlot = 36;
+
+                        if (this.bestSwordSlot != -1) {
+                            if (this.bestSwordSlot != currentSlot) {
+                                this.putItemInSlot(currentSlot, this.bestSwordSlot);
+                                this.bestSwordSlot = currentSlot;
+                                return;
                             }
-                        } else if (stack.getItem() instanceof ItemTool && InventoryUtils.isBestTool(stack)) {
-                            final int toolType = InventoryUtils.getToolType(stack);
-                            if (toolType != -1 && slot != this.bestToolSlots[toolType])
-                                this.bestToolSlots[toolType] = slot;
-                        } else if (stack.getItem() instanceof ItemArmor && InventoryUtils.isBestArmor(stack)) {
-                            final ItemArmor armor = (ItemArmor) stack.getItem();
-
-                            final int pieceSlot = this.bestArmorPieces[armor.armorType];
-
-                            if (pieceSlot == -1 || slot != pieceSlot)
-                                this.bestArmorPieces[armor.armorType] = slot;
-                        } else if (stack.getItem() instanceof ItemBow && this.archeryProperty.getValue() && InventoryUtils.isBestBow(stack)) {
-                            if (slot != bestBowSlot)
-                                this.bestBowSlot = slot;
-                        } else if (stack.getItem() instanceof ItemAppleGold)
-                            this.gappleStackSlots.add(slot);
-                        else if (!this.trash.contains(slot) && !isValidStack(stack, this.archeryProperty.getValue()))
-                            this.trash.add(slot);
-                    }
-                }
-
-                if (autoArmor && this.equipArmor())
-                    return;
-
-                if (cleaner && this.dropItem(this.trash))
-                    return;
-
-                if (sorter) {
-                    int currentSlot = 36;
-
-                    if (this.bestSwordSlot != -1) {
-                        if (this.bestSwordSlot != currentSlot) {
-                            this.putItemInSlot(currentSlot, this.bestSwordSlot);
-                            this.bestSwordSlot = currentSlot;
-                            return;
+                            currentSlot++;
                         }
-                        currentSlot++;
-                    }
 
 
-                    if (this.bestBowSlot != -1) {
-                        if (this.bestBowSlot != currentSlot) {
-                            this.putItemInSlot(currentSlot, this.bestSwordSlot);
-                            this.bestBowSlot = currentSlot;
-                            return;
+                        if (this.bestBowSlot != -1) {
+                            if (this.bestBowSlot != currentSlot) {
+                                this.putItemInSlot(currentSlot, this.bestSwordSlot);
+                                this.bestBowSlot = currentSlot;
+                                return;
+                            }
+                            currentSlot++;
                         }
-                        currentSlot++;
-                    }
 
-                    if (!this.gappleStackSlots.isEmpty()) {
-                        this.gappleStackSlots.sort((slot1, slot2) -> Wrapper.getStackInSlot(slot2).stackSize - Wrapper.getStackInSlot(slot1).stackSize);
-                        int bestGappleSlot = this.gappleStackSlots.get(0);
-                        if (bestGappleSlot != currentSlot) {
-                            this.putItemInSlot(currentSlot, bestGappleSlot);
-                            this.gappleStackSlots.set(0, currentSlot);
-                            return;
+                        if (!this.gappleStackSlots.isEmpty()) {
+                            this.gappleStackSlots.sort((slot1, slot2) -> mc.getStackInSlot(slot2).stackSize - mc.getStackInSlot(slot1).stackSize);
+                            int bestGappleSlot = this.gappleStackSlots.get(0);
+                            if (bestGappleSlot != currentSlot) {
+                                this.putItemInSlot(currentSlot, bestGappleSlot);
+                                this.gappleStackSlots.set(0, currentSlot);
+                                return;
+                            }
+                            currentSlot++;
                         }
-                        currentSlot++;
-                    }
 
 
-                    if (this.sortToolsProperty.getValue()) {
-                        final int[] toolSlots = {currentSlot, currentSlot + 1, currentSlot + 2};
+                        if (this.sortToolsProperty.getValue()) {
+                            final int[] toolSlots = {currentSlot, currentSlot + 1, currentSlot + 2};
 
-                        for (int toolSlot : this.bestToolSlots) {
-                            if (toolSlot != -1) {
-                                int type = InventoryUtils.getToolType(Wrapper.getStackInSlot(toolSlot));
-                                if (type != -1) {
-                                    if (toolSlot != toolSlots[type]) {
-                                        putToolsInSlot(type, toolSlots);
-                                        return;
+                            for (int toolSlot : this.bestToolSlots) {
+                                if (toolSlot != -1) {
+                                    int type = InventoryUtils.getToolType(mc.getStackInSlot(toolSlot));
+                                    if (type != -1) {
+                                        if (toolSlot != toolSlots[type]) {
+                                            putToolsInSlot(type, toolSlots);
+                                            return;
+                                        }
                                     }
                                 }
                             }
@@ -207,7 +201,7 @@ public final class InventoryManager extends Module {
 
             if (piece != -1) {
                 int armorPieceSlot = i + 5;
-                ItemStack stack = Wrapper.getStackInSlot(armorPieceSlot);
+                ItemStack stack = mc.getStackInSlot(armorPieceSlot);
                 if (stack != null)
                     continue;
 
@@ -220,6 +214,7 @@ public final class InventoryManager extends Module {
 
         return false;
     }
+
 
     private boolean dropItem(final List<Integer> listOfSlots) {
         if (!listOfSlots.isEmpty()) {
@@ -235,7 +230,7 @@ public final class InventoryManager extends Module {
 
     @Override
     public void onEnable() {
-        this.openInventory = Wrapper.getCurrentScreen() instanceof GuiContainer;
+        this.openInventory = false;
         this.interactionsTimer.reset();
     }
 
@@ -255,7 +250,7 @@ public final class InventoryManager extends Module {
 
     private void putItemInSlot(final int slot, final int slotIn) {
         open();
-        InventoryUtils.windowClick(Wrapper.getPlayer().inventoryContainer.windowId,
+        InventoryUtils.windowClick(mc.thePlayer().inventoryContainer.windowId,
                 slotIn,
                 slot - 36,
                 InventoryUtils.ClickType.SWAP_WITH_HOT_BAR_SLOT);
@@ -265,12 +260,17 @@ public final class InventoryManager extends Module {
     private void putToolsInSlot(final int tool, final int[] toolSlots) {
         open();
         int toolSlot = toolSlots[tool];
-        InventoryUtils.windowClick(Wrapper.getPlayer().inventoryContainer.windowId,
+        InventoryUtils.windowClick(mc.thePlayer().inventoryContainer.windowId,
                 this.bestToolSlots[tool],
                 toolSlot - 36,
                 InventoryUtils.ClickType.SWAP_WITH_HOT_BAR_SLOT);
         this.bestToolSlots[tool] = toolSlot;
         close();
+    }
+
+    private boolean isInventoryOpen() {
+        final GuiScreen currentScreen = mc.getCurrentScreen();
+       return currentScreen instanceof GuiInventory;
     }
 
     private void open() {

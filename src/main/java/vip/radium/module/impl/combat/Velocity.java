@@ -12,7 +12,7 @@ import vip.radium.module.ModuleInfo;
 import vip.radium.property.impl.DoubleProperty;
 import vip.radium.property.impl.Representation;
 import vip.radium.utils.ServerUtils;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 @ModuleInfo(label = "Velocity", category = ModuleCategory.COMBAT)
 public final class Velocity extends Module {
@@ -27,7 +27,7 @@ public final class Velocity extends Module {
         Packet<?> packet = e.getPacket();
         if (packet instanceof S12PacketEntityVelocity) {
             S12PacketEntityVelocity velocityPacket = (S12PacketEntityVelocity) packet;
-            if (velocityPacket.getEntityID() == Wrapper.getPlayer().getEntityId()) {
+            if (velocityPacket.getEntityID() == mc.thePlayer().getEntityId()) {
                 double verticalPerc = verticalPercentProperty.getValue();
                 double horizontalPerc = horizontalPercentProperty.getValue();
                 if (verticalPerc == 0 && horizontalPerc == 0) {

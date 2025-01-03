@@ -23,7 +23,7 @@ import vip.radium.notification.NotificationType;
 import vip.radium.property.Property;
 import vip.radium.utils.HypixelGameUtils;
 import vip.radium.utils.TimerUtil;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 import java.util.Arrays;
 import java.util.List;
@@ -100,7 +100,7 @@ public final class AutoHypixel extends Module {
     public final Listener<UpdatePositionEvent> onUpdatePositionEvent = event -> {
         if (event.isPre()) {
             if (needSend && gameTimer.hasElapsed(2000L)) {
-                Wrapper.sendPacketDirect(new C01PacketChatMessage("/play " +
+                mc.sendPacketDirect(new C01PacketChatMessage("/play " +
                         HypixelGameUtils.getSkyWarsMode().name().toLowerCase()));
                 needSend = false;
             }

@@ -15,7 +15,7 @@ import vip.radium.property.impl.DoubleProperty;
 import vip.radium.property.impl.Representation;
 import vip.radium.utils.InventoryUtils;
 import vip.radium.utils.TimerUtil;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,13 +44,13 @@ public final class ChestStealer extends Module {
     @EventLink
     public final Listener<UpdatePositionEvent> onUpdatePositionEvent = e -> {
         if (e.isPre()) {
-            if (Wrapper.getCurrentScreen() instanceof GuiChest) {
-                GuiChest chest = (GuiChest) Wrapper.getCurrentScreen();
+            if (mc.getCurrentScreen() instanceof GuiChest) {
+                GuiChest chest = (GuiChest) mc.getCurrentScreen();
                 IInventory lowerChestInv = chest.getLowerChestInventory();
                 if (lowerChestInv.getDisplayName().getUnformattedText().contains("Chest") || !nameCheckProperty.getValue()) {
                     if (isInventoryFull() || InventoryUtils.isInventoryEmpty(lowerChestInv, archeryProperty.getValue())) {
                         if (timer.hasElapsed(closeDelayProperty.getValue().longValue()))
-                            Wrapper.getPlayer().closeScreen();
+                            mc.thePlayer().closeScreen();
                         return;
                     }
 
@@ -72,7 +72,7 @@ public final class ChestStealer extends Module {
 
     private boolean isInventoryFull() {
         for (int i = 9; i < 45; i++) {
-            if (!Wrapper.getPlayer().inventoryContainer.getSlot(i).getHasStack())
+            if (!mc.thePlayer().inventoryContainer.getSlot(i).getHasStack())
                 return false;
         }
         return true;

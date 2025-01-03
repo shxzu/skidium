@@ -4,7 +4,6 @@ import com.thealtening.auth.service.AlteningServiceType;
 import io.github.nevalackin.homoBus.Listener;
 import io.github.nevalackin.homoBus.annotations.EventLink;
 import io.github.nevalackin.homoBus.bus.impl.EventBus;
-import vip.radium.alt.AltManager;
 import vip.radium.command.CommandManager;
 import vip.radium.config.ConfigManager;
 import vip.radium.event.Event;
@@ -43,16 +42,11 @@ public final class RadiumClient {
     private PlayerManager playerManager;
     private NotificationManager notificationManager;
     private CommandManager commandManager;
-    private AltManager altManager;
-    public static final String NAME = "Radium";
-    public static final String VERSION = "v1.4.0";
+    public static final String NAME = "Skidium";
+    public static final String VERSION = "v0.1";
 
     public PlayerManager getPlayerManager() {
         return playerManager;
-    }
-
-    public AltManager getAltManager() {
-        return altManager;
     }
 
     public CommandManager getCommandManager() {
@@ -84,7 +78,6 @@ public final class RadiumClient {
 
         playerManager = new PlayerManager();
 
-        altManager = new AltManager();
 
         moduleManager = new ModuleManager();
 
@@ -96,8 +89,6 @@ public final class RadiumClient {
 
         moduleManager.postInit();
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> altManager.getAlteningAuth()
-                .updateService(AlteningServiceType.MOJANG)));
     };
 
     private static void setGLHints() {

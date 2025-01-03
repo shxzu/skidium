@@ -2,13 +2,14 @@ package vip.radium.event.impl.player;
 
 import vip.radium.event.CancellableEvent;
 
-public final class MoveEntityEvent extends CancellableEvent {
+public final class MoveEvent extends CancellableEvent {
 
     private double x;
     private double y;
     private double z;
+    private boolean pre = true;
 
-    public MoveEntityEvent(double x, double y, double z) {
+    public MoveEvent(double x, double y, double z) {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -37,5 +38,11 @@ public final class MoveEntityEvent extends CancellableEvent {
     public void setZ(double z) {
         this.z = z;
     }
+
+    public boolean isPre() { return pre;}
+
+    public boolean isPost() { return !pre;}
+
+    public void setPost() { pre = false; }
 
 }

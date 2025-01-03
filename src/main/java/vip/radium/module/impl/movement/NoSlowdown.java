@@ -16,7 +16,7 @@ import vip.radium.module.ModuleManager;
 import vip.radium.module.impl.combat.KillAura;
 import vip.radium.property.Property;
 import vip.radium.utils.MovementUtils;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 @ModuleInfo(label = "No Slowdown", category = ModuleCategory.MOVEMENT)
 public final class NoSlowdown extends Module {
@@ -38,11 +38,11 @@ public final class NoSlowdown extends Module {
     @EventLink
     public final Listener<UpdatePositionEvent> onUpdatePositionEvent = e -> {
         if (ncpProperty.getValue() && MovementUtils.isMoving() &&
-                !KillAura.isAutoBlocking() && Wrapper.getPlayer().isBlocking()) {
+                !KillAura.isAutoBlocking() && mc.thePlayer().isBlocking()) {
             if (e.isPre()) {
-                Wrapper.sendPacketDirect(PLAYER_DIGGING);
+                mc.sendPacketDirect(PLAYER_DIGGING);
             } else {
-                Wrapper.sendPacketDirect(BLOCK_PLACEMENT);
+                mc.sendPacketDirect(BLOCK_PLACEMENT);
             }
         }
     };

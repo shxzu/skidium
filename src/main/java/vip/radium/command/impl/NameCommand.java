@@ -6,7 +6,7 @@ import vip.radium.command.CommandExecutionException;
 import vip.radium.notification.Notification;
 import vip.radium.notification.NotificationType;
 import vip.radium.utils.ClipboardUtils;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 public final class NameCommand implements Command {
     @Override
@@ -16,7 +16,7 @@ public final class NameCommand implements Command {
 
     @Override
     public void execute(String[] arguments) throws CommandExecutionException {
-        String name = Wrapper.getPlayer().getGameProfile().getName();
+        String name = mc.thePlayer().getGameProfile().getName();
         ClipboardUtils.setClipboardContents(name);
         RadiumClient.getInstance().getNotificationManager().add(
                 new Notification("Name Command",

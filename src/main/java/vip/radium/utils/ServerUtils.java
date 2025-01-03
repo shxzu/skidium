@@ -21,13 +21,13 @@ public final class ServerUtils {
     }
 
     public static boolean isOnServer(String ip) {
-        return !Wrapper.getMinecraft().isSingleplayer() && getCurrentServerIP().endsWith(ip);
+        return !mc.getMinecraft().isSingleplayer() && getCurrentServerIP().endsWith(ip);
     }
 
     public static String getCurrentServerIP() {
-        return Wrapper.getMinecraft().isSingleplayer() ?
+        return mc.getMinecraft().isSingleplayer() ?
                 "Singleplayer" :
-                Wrapper.getMinecraft().getCurrentServerData().serverIP;
+                mc.getMinecraft().getCurrentServerData().serverIP;
     }
 
     public static boolean isOnHypixel() {
@@ -35,7 +35,7 @@ public final class ServerUtils {
     }
 
     public static long getPingToCurrentServer() {
-        return Wrapper.getMinecraft().isSingleplayer() ?
+        return mc.getMinecraft().isSingleplayer() ?
                 0 :
                 getPingToServer(getCurrentServerIP());
     }

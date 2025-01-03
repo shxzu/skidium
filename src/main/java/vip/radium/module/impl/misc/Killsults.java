@@ -11,7 +11,7 @@ import vip.radium.module.Module;
 import vip.radium.module.ModuleCategory;
 import vip.radium.module.ModuleInfo;
 import vip.radium.module.impl.combat.KillAura;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 import java.util.Arrays;
 
@@ -37,15 +37,15 @@ public class Killsults extends Module {
 
     @EventLink
     public final Listener<PacketReceiveEvent> PacketReceiveEvent = event -> {
-        if (Wrapper.getPlayer() == null || !(event.getPacket() instanceof S02PacketChat))
+        if (mc.thePlayer() == null || !(event.getPacket() instanceof S02PacketChat))
             return;
 
         S02PacketChat packetChat = (S02PacketChat) event.getPacket();
         String chatComponent = packetChat.getChatComponent().getUnformattedText();
         Entity target = RadiumClient.getInstance().getModuleManager().getModule(KillAura.class).getTarget();
 
-        Arrays.stream(deathMessages).filter(deathMessage -> chatComponent.contains(deathMessage + " " + Wrapper.getMinecraft().session.getUsername())).forEach(deathMessage -> Wrapper.getPlayer().sendChatMessage((target != null ? target.getCommandSenderName() + " " : "") + insults[RandomUtils.nextInt(0, insults.length)]));
+        Arrays.stream(deathMessages).filter(deathMessage -> chatComponent.contains(deathMessage + " " + mc.getMinecraft().session.getUsername())).forEach(deathMessage -> mc.thePlayer().sendChatMessage((target != null ? target.getCommandSenderName() + " " : "") + insults[RandomUtils.nextInt(0, insults.length)]));
         if (chatComponent.contains("KILL!"))
-            Wrapper.getPlayer().sendChatMessage((target != null ? target.getCommandSenderName() + " " : "") + insults[RandomUtils.nextInt(0, insults.length)]);
+            mc.thePlayer().sendChatMessage((target != null ? target.getCommandSenderName() + " " : "") + insults[RandomUtils.nextInt(0, insults.length)]);
     };
 }

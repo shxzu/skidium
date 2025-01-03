@@ -7,7 +7,7 @@ import net.minecraft.network.play.server.S12PacketEntityVelocity;
 import net.minecraft.network.play.server.S27PacketExplosion;
 import vip.radium.RadiumClient;
 import vip.radium.event.impl.packet.PacketReceiveEvent;
-import vip.radium.event.impl.player.MoveEntityEvent;
+import vip.radium.event.impl.player.MoveEvent;
 import vip.radium.event.impl.player.UpdatePositionEvent;
 import vip.radium.module.Module;
 import vip.radium.module.ModuleCategory;
@@ -20,7 +20,7 @@ import vip.radium.property.impl.EnumProperty;
 import vip.radium.utils.MovementUtils;
 import vip.radium.utils.PlayerInfoCache;
 import vip.radium.utils.ServerUtils;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 @ModuleInfo(label = "Long Jump", category = ModuleCategory.MOVEMENT)
 public final class LongJump extends Module {
@@ -46,7 +46,7 @@ public final class LongJump extends Module {
             } else if (packet instanceof S12PacketEntityVelocity) {
                 final S12PacketEntityVelocity velocityPacket = (S12PacketEntityVelocity) packet;
 
-                if (velocityPacket.getEntityID() == Wrapper.getPlayer().getEntityId()) {
+                if (velocityPacket.getEntityID() == mc.thePlayer().getEntityId()) {
                     damaged = true;
                 }
             }
@@ -54,7 +54,7 @@ public final class LongJump extends Module {
     };
     private int stage;
     @EventLink
-    public final Listener<MoveEntityEvent> onMoveEntityEvent = e -> {
+    public final Listener<MoveEvent> moveEventListener = e -> {
         if (waitProperty.getValue() && !damaged) {
             e.setCancelled();
             return;
@@ -70,7 +70,7 @@ public final class LongJump extends Module {
                         moveSpeed = baseMoveSpeed * MovementUtils.MAX_DIST;
                         if (MovementUtils.isOnIce())
                             moveSpeed *= MovementUtils.ICE_MOD;
-                        e.setY(Wrapper.getPlayer().motionY = MovementUtils.getJumpHeight());
+                        e.setY(mc.thePlayer().motionY = MovementUtils.getJumpHeight());
                     }
                     break;
                 case 1:
@@ -98,13 +98,13 @@ public final class LongJump extends Module {
                     return;
                 }
 
-                if (Wrapper.getPlayer().fallDistance >= 1.0F) {
+                if (mc.thePlayer().fallDistance >= 1.0F) {
                     toggle();
                     return;
                 }
 
                 if (stage > 4) {
-                    Wrapper.getTimer().timerSpeed = timerProperty.getValue().floatValue();
+                    mc.getTimer().timerSpeed = timerProperty.getValue().floatValue();
 
                     flyingTicks++;
 
@@ -136,9 +136,9 @@ public final class LongJump extends Module {
 
     @Override
     public void onDisable() {
-        Wrapper.getTimer().timerSpeed = 1.0F;
-        Wrapper.getPlayer().motionX = 0;
-        Wrapper.getPlayer().motionZ = 0;
+        mc.getTimer().timerSpeed = 1.0F;
+        mc.thePlayer().motionX = 0;
+        mc.thePlayer().motionZ = 0;
         Step.cancelStep = false;
     }
 

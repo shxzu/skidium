@@ -27,7 +27,6 @@ import vip.radium.property.impl.DoubleProperty;
 import vip.radium.property.impl.EnumProperty;
 import vip.radium.property.impl.MultiSelectEnumProperty;
 import vip.radium.utils.StringUtils;
-import vip.radium.utils.Wrapper;
 import vip.radium.utils.render.*;
 
 import java.awt.*;
@@ -70,12 +69,12 @@ public final class SkeetUI extends GuiScreen {
         ICONS_RENDERER.generateTextures();
 
         FONT_RENDERER = new TrueTypeFontRenderer(new Font(
-                "Tahoma", Font.PLAIN, 11), false, true);
+                "Tahoma", Font.PLAIN, 14), false, true);
 
         FONT_RENDERER.generateTextures();
 
         KEYBIND_FONT_RENDERER = new TrueTypeFontRenderer(new Font(
-                "Tahoma", Font.PLAIN, 9), false, false);
+                "Tahoma", Font.PLAIN, 12), false, false);
 
         KEYBIND_FONT_RENDERER.generateTextures();
 
@@ -476,7 +475,7 @@ public final class SkeetUI extends GuiScreen {
     }
 
     private void open() {
-        Wrapper.getMinecraft().displayGuiScreen(this);
+        vip.radium.utils.mc.getMinecraft().displayGuiScreen(this);
         alpha = 0;
         targetAlpha = 255;
         open = true;
@@ -490,7 +489,7 @@ public final class SkeetUI extends GuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         if (this.finishedClosing()) {
-            Wrapper.getMinecraft().displayGuiScreen(null);
+            vip.radium.utils.mc.getMinecraft().displayGuiScreen(null);
             return;
         }
 

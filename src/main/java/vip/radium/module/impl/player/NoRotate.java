@@ -7,7 +7,7 @@ import vip.radium.event.impl.packet.PacketReceiveEvent;
 import vip.radium.module.Module;
 import vip.radium.module.ModuleCategory;
 import vip.radium.module.ModuleInfo;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 @ModuleInfo(label = "No Rotate", category = ModuleCategory.PLAYER)
 public final class NoRotate extends Module {
@@ -16,8 +16,8 @@ public final class NoRotate extends Module {
     public final Listener<PacketReceiveEvent> onPacketReceiveEvent = e -> {
         if (e.getPacket() instanceof S08PacketPlayerPosLook) {
             S08PacketPlayerPosLook packet = (S08PacketPlayerPosLook) e.getPacket();
-            packet.yaw = Wrapper.getPlayer().rotationYaw;
-            packet.pitch = Wrapper.getPlayer().rotationPitch;
+            packet.yaw = mc.thePlayer().rotationYaw;
+            packet.pitch = mc.thePlayer().rotationPitch;
         }
     };
 

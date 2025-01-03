@@ -13,7 +13,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.*;
 import org.lwjgl.opengl.GL11;
 import vip.radium.event.EventBusPriorities;
-import vip.radium.event.impl.player.MoveEntityEvent;
+import vip.radium.event.impl.player.MoveEvent;
 import vip.radium.event.impl.player.UpdatePositionEvent;
 import vip.radium.event.impl.render.Render3DEvent;
 import vip.radium.module.Module;
@@ -25,7 +25,7 @@ import vip.radium.property.impl.DoubleProperty;
 import vip.radium.property.impl.EnumProperty;
 import vip.radium.property.impl.Representation;
 import vip.radium.utils.MovementUtils;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 import vip.radium.utils.render.OGLUtils;
 import vip.radium.utils.render.RenderingUtils;
 
@@ -103,12 +103,12 @@ public final class TargetStrafe extends Module {
                 case CLOSEST:
                     currentTarget = null;
 
-                    final List<EntityLivingBase> entities = Wrapper.getLivingEntities(this::isValid);
+                    final List<EntityLivingBase> entities = mc.getLivingEntities(this::isValid);
 
                     float closest = this.targetRange.getValue().floatValue();
 
                     for (EntityLivingBase entity : entities) {
-                        final float dist = Wrapper.getPlayer().getDistanceToEntity(entity);
+                        final float dist = mc.thePlayer().getDistanceToEntity(entity);
 
                         if (dist < closest) {
                             currentTarget = entity;
@@ -146,7 +146,7 @@ public final class TargetStrafe extends Module {
     }
 
     private static double getDistXZToPoint(Point3D point) {
-        final Entity localPlayer = Wrapper.getPlayer();
+        final Entity localPlayer = mc.thePlayer();
         double xDist = point.x - localPlayer.posX;
         double zDist = point.z - localPlayer.posZ;
         return Math.sqrt(xDist * xDist + zDist * zDist);
@@ -161,12 +161,12 @@ public final class TargetStrafe extends Module {
     }
 
     private static boolean validatePoint(final double x, final double y, final double z) {
-        final EntityPlayer player = Wrapper.getPlayer();
-        final WorldClient world = Wrapper.getWorld();
+        final EntityPlayer player = mc.thePlayer();
+        final WorldClient world = mc.getWorld();
         final Vec3 pointVec = new Vec3(x, y, z);
         final IBlockState blockState = world.getBlockState(new BlockPos(pointVec));
 
-        final MovingObjectPosition rayTraceResult = Wrapper.getWorld().rayTraceBlocks(player.getPositionVector(), pointVec,
+        final MovingObjectPosition rayTraceResult = mc.getWorld().rayTraceBlocks(player.getPositionVector(), pointVec,
                 false, true, false);
 
         // TODO: Dont u dare forget to do this nigga
@@ -179,9 +179,9 @@ public final class TargetStrafe extends Module {
     private static boolean isOverVoid(final double x, final double z) {
         // Note: This is different to MovementUtils#isOverVoid
         // since it uses the points x and z pos
-        final double startY = Wrapper.getPlayer().posY;
+        final double startY = mc.thePlayer().posY;
         for (double posY = startY; posY > 0.0; posY--) {
-            final IBlockState state = Wrapper.getWorld().getBlockState(new BlockPos(x, posY, z));
+            final IBlockState state = mc.getWorld().getBlockState(new BlockPos(x, posY, z));
             if (state.getBlock().canCollideCheck(state, false)) {
                 return startY - posY > 3;
             }
@@ -191,13 +191,13 @@ public final class TargetStrafe extends Module {
     }
 
     private boolean isValid(EntityLivingBase entity) {
-        return !(entity instanceof EntityPlayerSP) && entity.isEntityAlive() && entity.getDistanceToEntity(Wrapper.getPlayer()) < targetRange.getValue();
+        return !(entity instanceof EntityPlayerSP) && entity.isEntityAlive() && entity.getDistanceToEntity(mc.thePlayer()) < targetRange.getValue();
     }
 
     public boolean shouldAdaptSpeed() {
         if (!adaptiveSpeedProperty.getValue())
             return false;
-        EntityPlayerSP player = Wrapper.getPlayer();
+        EntityPlayerSP player = mc.thePlayer();
         double xDist = currentPoint.x - player.posX;
         double zDist = currentPoint.z - player.posZ;
         return StrictMath.sqrt(xDist * xDist + zDist * zDist) < 0.2;
@@ -215,12 +215,12 @@ public final class TargetStrafe extends Module {
         return currentTarget != null && currentPoint != null;
     }
 
-    public void setSpeed(MoveEntityEvent event, double speed) {
+    public void setSpeed(MoveEvent event, double speed) {
         MovementUtils.setSpeed(event, speed, 1, 0, getYawToPoint(currentPoint));
     }
 
     private float getYawToPoint(Point3D point) {
-        EntityPlayerSP player = Wrapper.getPlayer();
+        EntityPlayerSP player = mc.thePlayer();
         double xDist = point.x - player.posX;
         double zDist = point.z - player.posZ;
         float rotationYaw = player.rotationYaw;

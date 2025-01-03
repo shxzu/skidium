@@ -13,7 +13,7 @@ import vip.radium.event.impl.packet.PacketReceiveEvent;
 import vip.radium.module.Module;
 import vip.radium.module.ModuleCategory;
 import vip.radium.module.ModuleInfo;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 @ModuleInfo(label = "Better Chat", category = ModuleCategory.MISCELLANEOUS)
 public final class BetterChat extends Module {
@@ -32,7 +32,7 @@ public final class BetterChat extends Module {
             if (s02PacketChat.getType() == 0) {
                 IChatComponent message = s02PacketChat.getChatComponent();
                 String rawMessage = message.getFormattedText();
-                GuiNewChat chatGui = Wrapper.getMinecraft().ingameGUI.getChatGUI();
+                GuiNewChat chatGui = mc.getMinecraft().ingameGUI.getChatGUI();
                 if (lastMessage.equals(rawMessage)) {
                     chatGui.deleteChatLine(line);
                     amount++;
@@ -54,6 +54,6 @@ public final class BetterChat extends Module {
     };
 
     private boolean isTypingInChat() {
-        return Wrapper.getCurrentScreen() instanceof GuiChat;
+        return mc.getCurrentScreen() instanceof GuiChat;
     }
 }

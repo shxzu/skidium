@@ -6,7 +6,7 @@ import vip.radium.RadiumClient;
 import vip.radium.command.Command;
 import vip.radium.command.CommandExecutionException;
 import vip.radium.module.Module;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 public class BindCommand implements Command {
 
@@ -24,12 +24,12 @@ public class BindCommand implements Command {
         int key = Keyboard.getKeyIndex(arguments[2].toUpperCase());
 
         if(module == null) {
-            Wrapper.addChatMessage(EnumChatFormatting.RED + arguments[1] + " \u00A77is an invalid module");
+            mc.addChatMessage(EnumChatFormatting.RED + arguments[1] + " \u00A77is an invalid module");
             return;
         }
 
         module.setKey(key);
-        Wrapper.addChatMessage(String.format("Bound \u00A76%s \u00A77to \u00A76%s", module.getLabel(), key == 0 ? "none" : arguments[2].toUpperCase()));
+        mc.addChatMessage(String.format("Bound \u00A76%s \u00A77to \u00A76%s", module.getLabel(), key == 0 ? "none" : arguments[2].toUpperCase()));
     }
 
     @Override

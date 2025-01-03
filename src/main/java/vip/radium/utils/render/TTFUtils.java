@@ -1,7 +1,7 @@
 package vip.radium.utils.render;
 
 import net.minecraft.util.ResourceLocation;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 import java.awt.*;
 import java.io.IOException;
@@ -14,7 +14,7 @@ public final class TTFUtils {
 
     public static Font getFontFromLocation(String fileName, int size) {
         try {
-            return Font.createFont(Font.TRUETYPE_FONT, Wrapper.getMinecraft().getResourceManager()
+            return Font.createFont(Font.TRUETYPE_FONT, mc.getMinecraft().getResourceManager()
                 .getResource(new ResourceLocation("radium/fonts/" + fileName))
                 .getInputStream())
                 .deriveFont(Font.PLAIN, size);

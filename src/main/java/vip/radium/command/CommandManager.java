@@ -5,7 +5,7 @@ import io.github.nevalackin.homoBus.Listener;
 import vip.radium.RadiumClient;
 import vip.radium.command.impl.*;
 import vip.radium.event.impl.player.SendMessageEvent;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 import vip.radium.utils.handler.Manager;
 
 import java.util.Arrays;
@@ -28,15 +28,15 @@ public final class CommandManager extends Manager<Command> {
                             try {
                                 command.execute(arguments);
                             } catch (CommandExecutionException e) {
-                                Wrapper.addChatMessage("Invalid command syntax. Hint: " + e.getMessage());
+                                mc.addChatMessage("Invalid command syntax. Hint: " + e.getMessage());
                             }
                             return;
                         }
                     }
                 }
-                Wrapper.addChatMessage("'" + arguments[0] + "' is not a command. " + HELP_MESSAGE);
+                mc.addChatMessage("'" + arguments[0] + "' is not a command. " + HELP_MESSAGE);
             } else
-                Wrapper.addChatMessage("No arguments were supplied. " + HELP_MESSAGE);
+                mc.addChatMessage("No arguments were supplied. " + HELP_MESSAGE);
         }
     };
 

@@ -14,14 +14,14 @@ public final class RotationUtils {
     }
 
     public static float getOldYaw(Entity entity) {
-        final EntityPlayerSP player = Wrapper.getPlayer();
+        final EntityPlayerSP player = mc.thePlayer();
         return getYawBetween(player.prevRotationYaw,
                 player.prevPosX, player.prevPosZ,
                 entity.prevPosX, entity.prevPosZ);
     }
 
     public static float getYawToEntity(Entity entity) {
-        final EntityPlayerSP player = Wrapper.getPlayer();
+        final EntityPlayerSP player = mc.thePlayer();
         return getYawBetween(player.rotationYaw,
                 player.posX, player.posZ,
                 entity.posX, entity.posZ);
@@ -41,8 +41,8 @@ public final class RotationUtils {
         event.setPitch(appliedRotations[1]);
 
         if (lockview) {
-            Wrapper.getPlayer().rotationYaw = appliedRotations[0];
-            Wrapper.getPlayer().rotationPitch = appliedRotations[1];
+            mc.thePlayer().rotationYaw = appliedRotations[0];
+            mc.thePlayer().rotationPitch = appliedRotations[1];
         }
     }
 
@@ -54,7 +54,7 @@ public final class RotationUtils {
     }
 
     public static float[] getRotationsToEntity(Entity entity) {
-        final EntityPlayerSP player = Wrapper.getPlayer();
+        final EntityPlayerSP player = mc.thePlayer();
         final double xDif = entity.posX - player.posX;
         final double zDif = entity.posZ - player.posZ;
 
@@ -73,7 +73,7 @@ public final class RotationUtils {
     }
 
     public static double getMouseGCD() {
-        final float sens = Wrapper.getGameSettings().mouseSensitivity * 0.6F + 0.2F;
+        final float sens = mc.getGameSettings().mouseSensitivity * 0.6F + 0.2F;
         final float pow = sens * sens * sens * 8.0F;
         return pow * 0.15D;
     }
@@ -86,6 +86,38 @@ public final class RotationUtils {
         rotations[0] -= yawDif % gcd;
         rotations[1] -= pitchDif % gcd;
         return rotations;
+    }
+
+    public static float getScaffoldYaw() {
+        float yaw = 0.0f;
+        double moveForward = mc.thePlayer().movementInput.moveForward;
+        double moveStrafe = mc.thePlayer().movementInput.moveStrafe;
+        if (moveForward == 0.0) {
+            if (moveStrafe == 0.0) {
+                yaw = 180.0f;
+            } else if (moveStrafe > 0.0) {
+                yaw = 90.0f;
+            } else if (moveStrafe < 0.0) {
+                yaw = -90.0f;
+            }
+        } else if (moveForward > 0.0) {
+            if (moveStrafe == 0.0) {
+                yaw = 180.0f;
+            } else if (moveStrafe > 0.0) {
+                yaw = 135.0f;
+            } else if (moveStrafe < 0.0) {
+                yaw = -135.0f;
+            }
+        } else if (moveForward < 0.0) {
+            if (moveStrafe == 0.0) {
+                yaw = 0.0f;
+            } else if (moveStrafe > 0.0) {
+                yaw = 45.0f;
+            } else if (moveStrafe < 0.0) {
+                yaw = -45.0f;
+            }
+        }
+        return mc.thePlayer().rotationYaw + yaw;
     }
 
     public static float getYawBetween(final float yaw,

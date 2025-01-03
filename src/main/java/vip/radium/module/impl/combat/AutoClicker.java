@@ -10,7 +10,7 @@ import vip.radium.module.ModuleInfo;
 import vip.radium.property.Property;
 import vip.radium.property.impl.DoubleProperty;
 import vip.radium.utils.TimerUtil;
-import vip.radium.utils.Wrapper;
+import vip.radium.utils.mc;
 
 @ModuleInfo(label = "Auto Clicker", category = ModuleCategory.COMBAT)
 public final class AutoClicker extends Module {
@@ -25,12 +25,12 @@ public final class AutoClicker extends Module {
 
     @EventLink
     public final Listener<TickEvent> onTickEvent = event -> {
-        if (rightClickProperty.getValue() && Wrapper.getGameSettings().keyBindUseItem.isKeyDown()) {
-            Wrapper.getMinecraft().rightClickMouse();
-        } else if (Wrapper.getGameSettings().keyBindAttack.isKeyDown() && !Wrapper.getPlayer().isUsingItem()) {
+        if (rightClickProperty.getValue() && mc.getGameSettings().keyBindUseItem.isKeyDown()) {
+            mc.getMinecraft().rightClickMouse();
+        } else if (mc.getGameSettings().keyBindAttack.isKeyDown() && !mc.thePlayer().isUsingItem()) {
             final int cps = RandomUtils.nextInt(minApsProperty.getValue().intValue(), maxApsProperty.getValue().intValue());
             if (cpsTimer.hasElapsed(1000 / cps)) {
-                Wrapper.getMinecraft().clickMouse();
+                mc.getMinecraft().clickMouse();
                 cpsTimer.reset();
             }
         }

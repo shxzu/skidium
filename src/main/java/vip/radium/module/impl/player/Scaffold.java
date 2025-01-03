@@ -16,7 +16,6 @@ import net.minecraft.world.World;
 import org.apache.commons.lang3.RandomUtils;
 import vip.radium.event.EventBusPriorities;
 import vip.radium.event.impl.player.SafeWalkEvent;
-import vip.radium.event.impl.player.SprintEvent;
 import vip.radium.event.impl.player.UpdatePositionEvent;
 import vip.radium.event.impl.player.WindowClickEvent;
 import vip.radium.event.impl.render.overlay.Render2DEvent;
@@ -46,6 +45,7 @@ public final class Scaffold extends Module {
             EnumFacing.NORTH};
 
     private final Property<Boolean> hypixelProperty = new Property<>("Watchdog", true);
+    private final Property<Boolean> sprintProperty = new Property<>("Sprint", false);
     private final Property<Boolean> swingProperty = new Property<>("Swing", true);
     private final Property<Boolean> keepYProperty = new Property<>("Keep Y", true);
     private final Property<Boolean> safeWalkProperty = new Property<>("Safe Walk", false);
@@ -98,15 +98,12 @@ public final class Scaffold extends Module {
     };
 
     @EventLink(EventBusPriorities.HIGHEST)
-    public final Listener<SprintEvent> onSprintEvent = event -> {
-        if (hypixelProperty.getValue() && event.isSprinting()) {
-            event.setSprinting(false);
-        }
-    };
-
-    @EventLink(EventBusPriorities.HIGHEST)
     public final Listener<UpdatePositionEvent> onUpdatePositionEvent = event -> {
         if (event.isPre()) {
+            if(sprintProperty.getValue().equals(false)){
+                mc.thePlayer().setSprinting(false);
+            }
+
             updateBlockCount();
 
             this.data = null;
@@ -122,7 +119,7 @@ public final class Scaffold extends Module {
 
                 boolean override = true;
                 for (int i = InventoryUtils.END - 1; i >= InventoryUtils.ONLY_HOT_BAR_BEGIN; i--) {
-                    final ItemStack stack = Wrapper.getStackInSlot(i);
+                    final ItemStack stack = mc.getStackInSlot(i);
 
                     if (!InventoryUtils.isValid(stack, true)) {
                         InventoryUtils.windowClick(bestBlockStack, i - InventoryUtils.ONLY_HOT_BAR_BEGIN,
@@ -159,34 +156,35 @@ public final class Scaffold extends Module {
                 }
 
                 if (angles != null)
-                    RotationUtils.rotate(event, angles, 30.0F, false);
+                    RotationUtils.rotate(event, angles, 90.0F, false);
 
                 this.data = data;
             }
-        } else if (data != null && bestBlockStack >= InventoryUtils.ONLY_HOT_BAR_BEGIN) {
-            final EntityPlayerSP player = Wrapper.getPlayer();
+                if (data != null && bestBlockStack >= InventoryUtils.ONLY_HOT_BAR_BEGIN) {
+                final EntityPlayerSP player = mc.thePlayer();
 
-            if (++ticksSincePlace < delayTicksProperty.getValue()) return;
+                if (++ticksSincePlace < delayTicksProperty.getValue()) return;
 
-            player.inventory.currentItem = bestBlockStack - InventoryUtils.ONLY_HOT_BAR_BEGIN;
-            if (Wrapper.getPlayerController().onPlayerRightClick(player, Wrapper.getWorld(),
-                    player.getCurrentEquippedItem(),
-                    data.pos, data.face, data.hitVec)) {
-                placeCounter++;
+                player.inventory.currentItem = bestBlockStack - InventoryUtils.ONLY_HOT_BAR_BEGIN;
+                if (mc.getPlayerController().onPlayerRightClick(player, mc.getWorld(),
+                        player.getCurrentEquippedItem(),
+                        data.pos, data.face, data.hitVec)) {
+                    placeCounter++;
 
-                this.towering = towerProperty.getValue() && Wrapper.getGameSettings().keyBindJump.isKeyDown();
+                    this.towering = towerProperty.getValue() && mc.getGameSettings().keyBindJump.isKeyDown();
 
-                if (this.towering && MovementUtils.isDistFromGround(0.0626) &&
-                        (placeCounter % 4 != 0 || !this.hypixelProperty.getValue())) {
-                    player.motionY = MovementUtils.getJumpHeight() - 0.000454352838557992;
+                    if (this.towering && MovementUtils.isDistFromGround(0.0626) &&
+                            (placeCounter % 4 != 0 || !this.hypixelProperty.getValue())) {
+                        player.motionY = MovementUtils.getJumpHeight() - 0.000454352838557992;
+                    }
+
+                    if (swingProperty.getValue()) player.swingItem();
+                    else mc.sendPacket(new C0APacketAnimation());
+
+                    ticksSincePlace = 0;
                 }
-
-                if (swingProperty.getValue()) player.swingItem();
-                else Wrapper.sendPacket(new C0APacketAnimation());
-
-                ticksSincePlace = 0;
             }
-        }
+        };
     };
 
     private static int findBestBlockStack(int start, int end) {
@@ -194,7 +192,7 @@ public final class Scaffold extends Module {
         int blockCount = -1;
 
         for (int i = end - 1; i >= start; --i) {
-            ItemStack stack = Wrapper.getStackInSlot(i);
+            ItemStack stack = mc.getStackInSlot(i);
 
             if (stack != null &&
                     stack.getItem() instanceof ItemBlock &&
@@ -210,7 +208,7 @@ public final class Scaffold extends Module {
     }
 
     private BlockPos getBlockUnder() {
-        final EntityPlayerSP player = Wrapper.getPlayer();
+        final EntityPlayerSP player = mc.thePlayer();
         final boolean useLastPos = this.keepYProperty.getValue() && !towering;
         final double playerPos = player.posY - 1.0;
         if (!useLastPos)
@@ -219,7 +217,7 @@ public final class Scaffold extends Module {
     }
 
     private static float[] getRotations(final BlockData data) {
-        final EntityPlayerSP player = Wrapper.getPlayer();
+        final EntityPlayerSP player = mc.thePlayer();
 
         final Vec3 hitVec = data.hitVec;
 
@@ -239,7 +237,7 @@ public final class Scaffold extends Module {
         final Vec3 pos = data.hitVec;
         if (pos == null)
             return false;
-        final EntityPlayerSP player = Wrapper.getPlayer();
+        final EntityPlayerSP player = mc.thePlayer();
         final double x = (pos.xCoord - player.posX);
         final double y = (pos.yCoord - (player.posY + player.getEyeHeight()));
         final double z = (pos.zCoord - player.posZ);
@@ -248,7 +246,7 @@ public final class Scaffold extends Module {
 
     private static boolean validateReplaceable(final BlockData data) {
         final BlockPos pos = data.pos.offset(data.face);
-        final World world = Wrapper.getWorld();
+        final World world = mc.getWorld();
         return world.getBlockState(pos)
                 .getBlock()
                 .isReplaceable(world, pos);
@@ -257,7 +255,7 @@ public final class Scaffold extends Module {
     private static BlockData getBlockData(final BlockPos pos) {
         final BlockPos[] blockPositions = BLOCK_POSITIONS;
         final EnumFacing[] facings = FACINGS;
-        final WorldClient world = Wrapper.getWorld();
+        final WorldClient world = mc.getWorld();
 
         // 1 of the 4 directions around player
         for (int i = 0; i < blockPositions.length; i++) {
@@ -314,14 +312,14 @@ public final class Scaffold extends Module {
         blockCount = 0;
         placeCounter = 0;
         ticksSincePlace = 0;
-        lastPos = (int) Wrapper.getPlayer().posY;
-        originalHotBarSlot = Wrapper.getPlayer().inventory.currentItem;
+        lastPos = (int) mc.thePlayer().posY;
+        originalHotBarSlot = mc.thePlayer().inventory.currentItem;
     }
 
     @Override
     public void onDisable() {
         angles = null;
-        Wrapper.getPlayer().inventory.currentItem = originalHotBarSlot;
+        mc.thePlayer().inventory.currentItem = originalHotBarSlot;
     }
 
     public boolean isRotating() {
@@ -332,7 +330,7 @@ public final class Scaffold extends Module {
         blockCount = 0;
 
         for (int i = InventoryUtils.EXCLUDE_ARMOR_BEGIN; i < InventoryUtils.END; i++) {
-            final ItemStack stack = Wrapper.getStackInSlot(i);
+            final ItemStack stack = mc.getStackInSlot(i);
 
             if (stack != null && stack.getItem() instanceof ItemBlock &&
                     InventoryUtils.isGoodBlockStack(stack))
@@ -363,8 +361,8 @@ public final class Scaffold extends Module {
 
             final Vec3 hitVec = new Vec3(pos).addVector(x + z, directionVec.getY() * 0.5D, x + z);
 
-            final Vec3 src = Wrapper.getPlayer().getPositionEyes(1.0F);
-            final MovingObjectPosition obj = Wrapper.getWorld().rayTraceBlocks(src,
+            final Vec3 src = mc.thePlayer().getPositionEyes(1.0F);
+            final MovingObjectPosition obj = mc.getWorld().rayTraceBlocks(src,
                     hitVec,
                     false,
                     false,
@@ -383,7 +381,7 @@ public final class Scaffold extends Module {
             }
 
             if (face != EnumFacing.DOWN && face != EnumFacing.UP) {
-                final IBlockState blockState = Wrapper.getWorld().getBlockState(obj.getBlockPos());
+                final IBlockState blockState = mc.getWorld().getBlockState(obj.getBlockPos());
                 final Block blockAtPos = blockState.getBlock();
 
                 double blockFaceOffset;

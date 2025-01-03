@@ -35,7 +35,6 @@ import paulscode.sound.codecs.CodecJOrbis;
 import paulscode.sound.libraries.LibraryLWJGLOpenAL;
 import vip.radium.RadiumClient;
 import vip.radium.module.impl.visuals.Hitmarkers;
-import vip.radium.utils.Wrapper;
 
 public class SoundManager
 {
