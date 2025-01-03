@@ -4,7 +4,7 @@
 This is so bad rn. Lol.
 
 Videos of the client:
-https://www.youtube.com/channel/UCRcJOqETKWtg5P5J3mB_oMw
+https://www.youtube.com/@shxzufr
 ## How to run
 No released yet. It's barley in early alpha. 😭
 
