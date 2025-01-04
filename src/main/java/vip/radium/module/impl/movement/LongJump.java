@@ -127,7 +127,6 @@ public final class LongJump extends Module {
 
     @Override
     public void onEnable() {
-        Step.cancelStep = true;
         groundTicks = 0;
         stage = 0;
         damaged = false;
@@ -139,7 +138,6 @@ public final class LongJump extends Module {
         mc.getTimer().timerSpeed = 1.0F;
         mc.thePlayer().motionX = 0;
         mc.thePlayer().motionZ = 0;
-        Step.cancelStep = false;
     }
 
     private boolean isWatchdog() {

@@ -2,10 +2,12 @@ package vip.radium.module.impl.combat;
 
 import io.github.nevalackin.homoBus.Listener;
 import io.github.nevalackin.homoBus.annotations.EventLink;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import vip.radium.event.impl.entity.EntityHealthUpdateEvent;
+import vip.radium.event.impl.player.MoveEvent;
 import vip.radium.event.impl.world.WorldLoadEvent;
 import vip.radium.module.Module;
 import vip.radium.module.ModuleCategory;
@@ -21,6 +23,7 @@ public final class AntiBot extends Module {
 
     private final EnumProperty<Mode> mode = new EnumProperty<>("Mode", Mode.WATCHDOG);
     private final List<Entity> validEntities = new ArrayList<>();
+    Minecraft mc = Minecraft.getMinecraft();
 
     @EventLink
     public final Listener<WorldLoadEvent> onWorldLoad = event -> {
@@ -28,9 +31,24 @@ public final class AntiBot extends Module {
     };
 
     @EventLink
+    public final Listener<MoveEvent> moveEventListener = event -> {
+        if(mode.getValue() == Mode.MUSH) {
+            mc.theWorld.playerEntities.forEach(player -> {
+                if (player.moveForward != 0 || player.moveStrafing != 0) {
+                    validEntities.add(player);
+                } else {
+                    validEntities.remove(player);
+                }
+            });
+        }
+    };
+
+    @EventLink
     public final Listener<EntityHealthUpdateEvent> onEntityHealthUpdate = event -> {
-        if (event.getEntity() instanceof EntityOtherPlayerMP)
-            this.validEntities.add(event.getEntity());
+        if(mode.getValue() == Mode.WATCHDOG) {
+            if (event.getEntity() instanceof EntityOtherPlayerMP)
+                this.validEntities.add(event.getEntity());
+        }
     };
 
     public AntiBot() {
@@ -42,7 +60,9 @@ public final class AntiBot extends Module {
     }
 
     private enum Mode {
-        WATCHDOG(PlayerUtils::hasInvalidNetInfo);
+        WATCHDOG(PlayerUtils::hasInvalidNetInfo),
+
+        MUSH(PlayerUtils::hasInvalidNetInfo);
 
         private final CheckPlayer botCheck;
 

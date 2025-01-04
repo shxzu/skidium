@@ -164,7 +164,6 @@ public final class Flight extends Module {
 
     @Override
     public void onEnable() {
-        Step.cancelStep = true;
         isThrowing = false;
         hasLanded = false;
         pearlAirBourne = false;
@@ -193,7 +192,6 @@ public final class Flight extends Module {
 
     @Override
     public void onDisable() {
-        Step.cancelStep = false;
         mc.getTimer().timerSpeed = 1.0F;
 
         if (toggleAuraProperty.getValue() && (killauraWasEnabled && !aura.isEnabled()))

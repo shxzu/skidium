@@ -2,8 +2,10 @@ package vip.radium.module.impl.movement;
 
 import io.github.nevalackin.homoBus.Listener;
 import io.github.nevalackin.homoBus.annotations.EventLink;
+import net.minecraft.network.play.server.S18PacketEntityTeleport;
 import net.minecraft.util.Timer;
 import vip.radium.event.EventBusPriorities;
+import vip.radium.event.impl.packet.PacketReceiveEvent;
 import vip.radium.event.impl.player.MoveEvent;
 import vip.radium.module.Module;
 import vip.radium.module.ModuleCategory;
@@ -16,17 +18,18 @@ import vip.radium.utils.*;
 public final class Speed extends Module {
 
     private final EnumProperty<SpeedMode> speedModeProperty = new EnumProperty<>("Mode", SpeedMode.WATCHDOG);
-/*I FUCKING HATE THAT MC.THEPLAYER().JUMP() DOESNT WORK RIGHT!*/
+    /*I FUCKING HATE THAT MC.THEPLAYER().JUMP() DOESNT WORK RIGHT!*/
     private boolean wasOnGround;
     public TimerUtil timer = new TimerUtil();
+    private boolean bobToggle = false;
     private int airTicks;
 
     @EventLink(EventBusPriorities.LOW)
     public final Listener<MoveEvent> moveEventListener = e -> {
         switch (speedModeProperty.getValue()) {
             case WATCHDOG:
-                if(MovementUtils.isOnGround()) {
-                    if(MovementUtils.isMoving()) {
+                if (MovementUtils.isOnGround()) {
+                    if (MovementUtils.isMoving()) {
                         mc.getGameSettings().keyBindJump.pressed = true;
                         MovementUtils.strafe();
                     }
@@ -36,9 +39,11 @@ public final class Speed extends Module {
             case MUSHMC:
                 if (MovementUtils.isMoving() && !mc.getGameSettings().keyBindJump.isKeyDown()) {
                     MovementUtils.setMotion(mc.thePlayer().movementInput.moveForward, mc.thePlayer().movementInput.moveStrafe, mc.thePlayer().rotationYaw, MovementUtils.getHorizontalSpeed());
-                    if(MovementUtils.isOnGround()) {
+                    if (MovementUtils.isOnGround()) {
                         if (MovementUtils.isMoving()) {
-                            e.setY(mc.thePlayer().motionY = 0.01F);
+                            e.setY(mc.thePlayer().motionY = 0.01);
+                            //gotta make it look like its off ground LMFAO;
+                            mc.getGameSettings().viewBobbing = false;
                             MovementUtils.setSpeed(e, MovementUtils.getBaseMoveSpeed() * 1.69);
                             mc.getTimer().timerSpeed = 1.3f;
                         }
@@ -70,22 +75,22 @@ public final class Speed extends Module {
                     if (MovementUtils.isMoving() && MovementUtils.isOnGround()) {
                         MovementUtils.strafe();
                         mc.getTimer().timerSpeed = 1.0599F;
-                        mc.getGameSettings().keyBindJump.pressed = true;
-                        MovementUtils.setSpeed(e,0.48);
+                        mc.thePlayer().motionY = MovementUtils.getJumpHeight();
+                        MovementUtils.setSpeed(e, 0.48);
                     }
                 }
 
                 break;
             case VULCAN2:
-                if(MovementUtils.isMoving()) {
-                    if(mc.thePlayer().isAirBorne && mc.thePlayer().fallDistance > 2) {
+                if (MovementUtils.isMoving()) {
+                    if (mc.thePlayer().isAirBorne && mc.thePlayer().fallDistance > 2) {
                         mc.getTimer().timerSpeed = 1f;
                         return;
                     }
 
-                    if(MovementUtils.isOnGround()) {
+                    if (MovementUtils.isOnGround()) {
                         mc.getGameSettings().keyBindJump.pressed = true;
-                        if(mc.thePlayer().motionY > 0) {
+                        if (mc.thePlayer().motionY > 0) {
                             mc.getTimer().timerSpeed = 1.1453f;
                         }
                         MovementUtils.setSpeed(e, 0.4815f);
@@ -110,7 +115,7 @@ public final class Speed extends Module {
                         }
                         wasOnGround = false;
                     }
-                    if(!MovementUtils.isOnGround()) {
+                    if (!MovementUtils.isOnGround()) {
                         mc.getGameSettings().keyBindJump.pressed = false;
                     }
                     MovementUtils.setSpeed(e, 0.33);
@@ -120,16 +125,30 @@ public final class Speed extends Module {
                 break;
             case STRAFE:
                 MovementUtils.strafe();
-                if(MovementUtils.isOnGround()) {
+                if (MovementUtils.isOnGround()) {
                     mc.getGameSettings().keyBindJump.pressed = true;
                 }
                 break;
             case LEGIT:
-                if(MovementUtils.isOnGround()) {
-                mc.getGameSettings().keyBindJump.pressed = true;
+                if (MovementUtils.isOnGround()) {
+                    mc.getGameSettings().keyBindJump.pressed = true;
                 }
                 break;
+        }
+    };
+
+    @EventLink(EventBusPriorities.LOW)
+    public final Listener<PacketReceiveEvent> packetReceiveEventListener = e -> {
+        if (e.getPacket() instanceof S18PacketEntityTeleport) {
+            if (speedModeProperty.getValue() == SpeedMode.MUSHMC) {
+            timer.reset();
+            mc.getTimer().timerSpeed = 1.0f;
+            if(timer.hasElapsed(600L)) {
+                mc.getTimer().timerSpeed = 1.4f;
+                timer.reset();
+                }
             }
+        }
     };
 
     public static double predictedMotion(double motion, int ticks) {
@@ -138,7 +157,7 @@ public final class Speed extends Module {
         } else {
             double predicted = motion;
 
-            for(int i = 0; i < ticks; ++i) {
+            for (int i = 0; i < ticks; ++i) {
                 predicted = (predicted - 0.08) * 0.9800000190734863;
             }
 
@@ -153,6 +172,7 @@ public final class Speed extends Module {
     @Override
     public void onDisable() {
         mc.getTimer().timerSpeed = 1f;
+        mc.getGameSettings().viewBobbing = true;
         mc.getGameSettings().keyBindJump.pressed = false;
     }
 

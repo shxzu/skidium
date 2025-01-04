@@ -8,6 +8,7 @@ import vip.radium.command.CommandManager;
 import vip.radium.config.ConfigManager;
 import vip.radium.event.Event;
 import vip.radium.event.impl.game.ClientStartupEvent;
+import vip.radium.event.impl.world.WorldLoadEvent;
 import vip.radium.player.PlayerManager;
 import vip.radium.gui.csgo.SkeetUI;
 import vip.radium.gui.font.FontManager;
@@ -23,14 +24,14 @@ import static org.lwjgl.opengl.GL11.*;
  * basic modules + commands need to be added
  * Fix gui expandable boxes not being able to be clicked if outside module box
  * Config in da gui
- * 2 block step
+ * 2 block step | DONE!
  * Fix scaffold silent or ghostblock when not jumping
  * southside chams mode
  * Armor dura on target hud and esps
  * add forceground to autopotuion and module checks (fly scaffold etc)
  * child options do not save
  * southside combat mods
- * Auto load config on startup
+ * Auto load config on startup | DONE!
  * module/property aliases
  */
 

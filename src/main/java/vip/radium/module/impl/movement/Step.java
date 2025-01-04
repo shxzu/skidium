@@ -9,14 +9,14 @@ import vip.radium.module.Module;
 import vip.radium.module.ModuleCategory;
 import vip.radium.module.ModuleInfo;
 import vip.radium.property.Property;
+import vip.radium.property.impl.DoubleProperty;
 import vip.radium.utils.MovementUtils;
 import vip.radium.utils.mc;
 
 @ModuleInfo(label = "Step", category = ModuleCategory.MOVEMENT)
 public final class Step extends Module {
 
-    public static boolean cancelStep;
-    private final Property<Boolean> cancelExtraPackets = new Property<>("Less Packets", true);
+    private final DoubleProperty heightProperty = new DoubleProperty("Step Height", 1, 1, 5.0, 1);
     private final double[] offsets = {0.42f, 0.7532f};
     private float timerWhenStepping;
     private boolean cancelMorePackets;
@@ -31,34 +31,7 @@ public final class Step extends Module {
     public final Listener<StepEvent> onStepEvent = e -> {
         if (!MovementUtils.isInLiquid() && MovementUtils.isOnGround() && !MovementUtils.isOnStairs()) {
             if (e.isPre()) {
-                e.setStepHeight(cancelStep ? 0.0f : 1.0F);
-            } else {
-                double steppedHeight = e.getHeightStepped();
-                for (double offset : offsets) {
-                    mc.sendPacketDirect(new C03PacketPlayer.C04PacketPlayerPosition(
-                        mc.thePlayer().posX,
-                        mc.thePlayer().posY + (offset * steppedHeight),
-                        mc.thePlayer().posZ,
-                        false));
-                }
-                timerWhenStepping = 1.0f / (offsets.length + 1);
-                cancelMorePackets = true;
-            }
-        }
-    };
-
-    @EventLink
-    public final Listener<PacketSendEvent> onPacketSendEvent = e -> {
-        if (cancelExtraPackets.getValue() && e.getPacket() instanceof C03PacketPlayer) {
-            if (cancelledPackets > 0) {
-                cancelMorePackets = false;
-                cancelledPackets = 0;
-                mc.getTimer().timerSpeed = 1.0f;
-            }
-
-            if (cancelMorePackets) {
-                mc.getTimer().timerSpeed = timerWhenStepping;
-                cancelledPackets++;
+                e.setStepHeight(heightProperty.getValue().floatValue());
             }
         }
     };

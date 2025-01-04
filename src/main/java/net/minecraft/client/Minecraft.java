@@ -11,6 +11,8 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.properties.PropertyMap;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
+import io.github.nevalackin.homoBus.Listener;
+import io.github.nevalackin.homoBus.annotations.EventLink;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.audio.MusicTicker;
@@ -912,6 +914,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
             } catch (Throwable var5) {
             }
 
+            RadiumClient.getInstance().getConfigManager().saveConfig("default");
             this.mcSoundHandler.unloadSounds();
         } finally {
             Display.destroy();
@@ -1738,6 +1741,15 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
             this.thePlayer.movementInput = new MovementInputFromOptions(this.gameSettings);
             this.playerController.setPlayerCapabilities(this.thePlayer);
             this.renderViewEntity = this.thePlayer;
+
+                if(RadiumClient.getInstance().getConfigManager().findConfig("default").getFile().exists()) {
+                    RadiumClient.getInstance().getConfigManager().loadConfig("default");
+                } else {
+                    RadiumClient.getInstance().getConfigManager().saveConfig("default");
+                    if(RadiumClient.getInstance().getConfigManager().findConfig("default").getFile().exists()) {
+                        RadiumClient.getInstance().getConfigManager().loadConfig("default");
+                    }
+                }
 
             RadiumClient.getInstance().getEventBus().post(new WorldLoadEvent());
         } else {

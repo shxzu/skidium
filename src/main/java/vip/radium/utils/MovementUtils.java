@@ -3,6 +3,7 @@ package vip.radium.utils;
 import net.minecraft.block.*;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
@@ -265,6 +266,10 @@ public final class MovementUtils {
     public static double getSpeed() {
         return mc.thePlayer() == null ? 0 : Math.sqrt(mc.thePlayer().motionX * mc.thePlayer().motionX
                 + mc.thePlayer().motionZ * mc.thePlayer().motionZ);
+    }
+
+    public static boolean isMoving(EntityPlayer player) {
+        return player.moveForward != 0.0F || player.moveStrafing != 0.0F;
     }
 
     public double getSpeed(MoveEvent moveEvent) {

@@ -13,7 +13,7 @@ import vip.radium.utils.mc;
 @ModuleInfo(label = "Sprint", category = ModuleCategory.MOVEMENT)
 public final class Sprint extends Module {
 
-    private final Property<Boolean> omniProperty = new Property<>("Omni", true);
+    private final Property<Boolean> omniProperty = new Property<>("Omni", false);
 
     private int groundTicks;
 
