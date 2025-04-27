@@ -4,13 +4,24 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
+import net.minecraft.world.World;
 import vip.radium.event.impl.player.UpdatePositionEvent;
 
 public final class RotationUtils {
 
     public static final double TO_RADS = 180.0D / StrictMath.PI;
+    public static World worldObj;
 
     private RotationUtils() {
+    }
+
+    public static MovingObjectPosition rayTrace(float[] rot, double blockReachDistance, float partialTicks) {
+        Vec3 vec3 = mc.thePlayer().getPositionEyes(partialTicks);
+        Vec3 vec31 = mc.thePlayer().getLookCustom(rot[0], rot[1]);
+        Vec3 vec32 = vec3.addVector(vec31.xCoord * blockReachDistance, vec31.yCoord * blockReachDistance, vec31.zCoord * blockReachDistance);
+        return mc.getWorld().rayTraceBlocks(vec3, vec32, false, false, false);
     }
 
     public static float getOldYaw(Entity entity) {
@@ -86,6 +97,21 @@ public final class RotationUtils {
         rotations[0] -= yawDif % gcd;
         rotations[1] -= pitchDif % gcd;
         return rotations;
+    }
+
+    public static float getScaffoldYawNoStrafe() {
+        float n = 0.0f;
+        final double moveForward = mc.thePlayer().movementInput.moveForward;
+
+        if (moveForward == 0.0) {
+            n = 135.0f;// Not moving, default yaw
+        } else if (moveForward > 0.0) {
+            n = 135.0f;// Moving straight forward
+        } else if (moveForward < 0.0) {
+            n = 180.0f;// Moving straight backward
+        }
+
+        return mc.thePlayer().rotationYaw + n;
     }
 
     public static float getScaffoldYaw() {

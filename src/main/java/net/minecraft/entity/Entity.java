@@ -2390,4 +2390,8 @@ public abstract class Entity implements ICommandSender {
 
         EnchantmentHelper.applyArthropodEnchantments(entityLivingBaseIn, entityIn);
     }
+
+    public Vec3 getLookCustom(float yaw, float pitch) {
+        return this.getVectorForRotation(pitch, yaw);
+    }
 }

@@ -1680,6 +1680,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
      * unloads the current world first
      */
     public void loadWorld(WorldClient worldClientIn) {
+        RadiumClient.getInstance().getConfigManager().saveConfig("default");
         this.loadWorld(worldClientIn, "");
     }
 
@@ -1687,6 +1688,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
      * par2Str is displayed on the loading screen to the user unloads the current world first
      */
     public void loadWorld(WorldClient worldClientIn, String loadingMessage) {
+
         if (worldClientIn == null) {
             NetHandlerPlayClient nethandlerplayclient = this.getNetHandler();
 
@@ -1745,7 +1747,6 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
                 if(RadiumClient.getInstance().getConfigManager().findConfig("default").getFile().exists()) {
                     RadiumClient.getInstance().getConfigManager().loadConfig("default");
                 } else {
-                    RadiumClient.getInstance().getConfigManager().saveConfig("default");
                     if(RadiumClient.getInstance().getConfigManager().findConfig("default").getFile().exists()) {
                         RadiumClient.getInstance().getConfigManager().loadConfig("default");
                     }

@@ -12,11 +12,13 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovementInput;
 import org.lwjgl.input.Keyboard;
 import vip.radium.event.impl.player.MoveEvent;
+import vip.radium.event.impl.player.SprintEvent;
 import vip.radium.event.impl.player.UpdatePositionEvent;
 import vip.radium.module.ModuleManager;
 import vip.radium.module.impl.combat.KillAura;
 import vip.radium.module.impl.combat.TargetStrafe;
 import vip.radium.module.impl.movement.NoSlowdown;
+import vip.radium.module.impl.movement.Sprint;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -73,6 +75,12 @@ public final class MovementUtils {
             mc.thePlayer().motionX = -Math.sin(movementDirectionRads) * speed;
             mc.thePlayer().motionZ = Math.cos(movementDirectionRads) * speed;
         }
+    }
+
+    public static boolean isMovingStraight() {
+        float direction = getMovementDirection() + 180;
+        float movingYaw = Math.round(direction / 45) * 45;
+        return movingYaw % 90 == 0f;
     }
 
     public static int getJumpBoostModifier() {
@@ -392,6 +400,10 @@ public final class MovementUtils {
         return base;
     }
 
+    public static void setSpeed(double moveSpeed) {
+        setSpeed(moveSpeed, mc.thePlayer().rotationYaw, mc.thePlayer().movementInput.moveStrafe, mc.thePlayer().movementInput.moveForward);
+    }
+
     public static void setSpeed(MoveEvent e, double speed) {
         final EntityPlayerSP player = mc.thePlayer();
         final TargetStrafe targetStrafe = TargetStrafe.getInstance();
@@ -405,6 +417,31 @@ public final class MovementUtils {
             }
         }
         setSpeed(e, speed, player.moveForward, player.moveStrafing, player.rotationYaw);
+    }
+
+    public static void setSpeed(double moveSpeed, float yaw, double strafe, double forward) {
+        if (forward != 0.0D) {
+            if (strafe > 0.0D) {
+                yaw += ((forward > 0.0D) ? -45 : 45);
+            } else if (strafe < 0.0D) {
+                yaw += ((forward > 0.0D) ? 45 : -45);
+            }
+            strafe = 0.0D;
+            if (forward > 0.0D) {
+                forward = 1.0D;
+            } else if (forward < 0.0D) {
+                forward = -1.0D;
+            }
+        }
+        if (strafe > 0.0D) {
+            strafe = 1.0D;
+        } else if (strafe < 0.0D) {
+            strafe = -1.0D;
+        }
+        double mx = Math.cos(Math.toRadians((yaw + 90.0F)));
+        double mz = Math.sin(Math.toRadians((yaw + 90.0F)));
+        mc.thePlayer().motionX = forward * moveSpeed * mx + strafe * moveSpeed * mz;
+        mc.thePlayer().motionZ = forward * moveSpeed * mz - strafe * moveSpeed * mx;
     }
 
     public static void setSpeed(MoveEvent e, double speed, float forward, float strafing, float yaw) {

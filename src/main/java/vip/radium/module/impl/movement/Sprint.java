@@ -24,12 +24,6 @@ public final class Sprint extends Module {
     @EventLink
     public final Listener<MoveEvent> moveEventListener = event -> {
         final boolean canSprint = MovementUtils.canSprint(omniProperty.getValue());
-        if (MovementUtils.isMoving()) {
-            if (omniProperty.getValue()) {
-                mc.thePlayer().setSprinting(true);
-            } else {
-                mc.getGameSettings().keyBindSprint.pressed = true;
-            }
-        }
+            mc.thePlayer().setSprinting(canSprint);
     };
 }
