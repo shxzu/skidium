@@ -70,7 +70,7 @@ public final class Speed extends Module {
                     }
                 }
                 break;
-            case MUSH:
+            case UNCP:
                 if (MovementUtils.isMoving() && !mc.getGameSettings().keyBindJump.isKeyDown()) {
                     MovementUtils.strafe();
                     if (airTicks >= 5.1) {
@@ -81,7 +81,7 @@ public final class Speed extends Module {
                     }
                 }
                 break;
-            case UNCP:
+            case MUSH:
             if (MovementUtils.isMoving() && !mc.getGameSettings().keyBindJump.isKeyDown()) {
                 MovementUtils.strafe();
                     mc.getTimer().timerSpeed = 1.2f;
