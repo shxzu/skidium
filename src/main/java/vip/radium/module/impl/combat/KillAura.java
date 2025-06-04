@@ -12,10 +12,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.client.*;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.Vec3;
+import net.minecraft.util.*;
 import org.apache.commons.lang3.RandomUtils;
 import vip.radium.RadiumClient;
 import vip.radium.event.EventBusPriorities;
@@ -91,6 +88,7 @@ public final class KillAura extends Module {
     private boolean entityInBlockRange;
     private Scaffold scaffold;
     private boolean swapped;
+    private float serverYaw;
 
     @EventLink
     public final Listener<PacketSendEvent> onPacketSendEvent = event -> {
@@ -122,8 +120,10 @@ public final class KillAura extends Module {
                 break;
 
             case VANILLA:
-                if(this.target != null && isHoldingSword()) {
-                    mc.thePlayer().setItemInUse(mc.thePlayer().getHeldItem(), 32767);
+                if(this.target != null) {
+                    if(isHoldingSword()) {
+                        mc.thePlayer().setItemInUse(mc.thePlayer().inventory.getCurrentItem(), 32678);
+                    }
                 }
                 break;
                     }
@@ -164,19 +164,22 @@ public final class KillAura extends Module {
                 RotationUtils.rotate(event, this.computeData(optimalTarget).rotations,
                         this.maxAngleChangeProperty.getValue().floatValue(), this.lockViewProperty.getValue());
 
+                serverYaw = this.computeData(optimalTarget).rotations[0];
+
                 if (this.attackMethodProperty.getValue() == AttackMethod.PRE) {
                     tryAttack(event);
                 }
             }
 
-            if(autoblockProperty.getValue().equals(AutoblockMode.WATCHDOG)) {
-
-                if (BPH.playerSlot != mc.thePlayer().inventory.currentItem % 8 + 1) {
-                    mc.thePlayer().sendQueue.sendPacket(new C09PacketHeldItemChange(BPH.playerSlot = mc.thePlayer().inventory.currentItem % 8 + 1));
-                    swapped = true;
-                }
-                if (BPH.delayAttack) {
-                    return;
+            if(autoblockProperty.getValue().equals(AutoblockMode.SWITCH)) {
+                if (BPH.playerSlot != mc.thePlayer().inventory.currentItem) {
+                    mc.thePlayer().sendQueue.sendPacket(new C09PacketHeldItemChange(BPH.playerSlot = mc.thePlayer().inventory.currentItem));
+                    if(this.target != null) {
+                        if(isHoldingSword()) {
+                            setBlockState(false, true);
+                        }
+                    }
+                    swapped = false;
                 }
             }
 
@@ -186,15 +189,23 @@ public final class KillAura extends Module {
 
             if (this.target != null && this.attackMethodProperty.getValue() == AttackMethod.POST)
                 tryAttack(event);
-
         }
 
-            if(autoblockProperty.getValue().equals(AutoblockMode.WATCHDOG)) {
-            if (BPH.playerSlot != mc.thePlayer().inventory.currentItem) {
-                mc.thePlayer().sendQueue.sendPacket(new C09PacketHeldItemChange(BPH.playerSlot = mc.thePlayer().inventory.currentItem));
-                swapped = false;
-                 }
+        if(autoblockProperty.getValue().equals(AutoblockMode.SWITCH)) {
+
+            if (BPH.playerSlot != mc.thePlayer().inventory.currentItem % 8 + 1) {
+                mc.thePlayer().sendQueue.sendPacket(new C09PacketHeldItemChange(BPH.playerSlot = mc.thePlayer().inventory.currentItem % 8 + 1));
+                if(this.target != null) {
+                    if(isHoldingSword()) {
+                        setBlockState(false, true);
+                    }
+                }
+                swapped = true;
             }
+            if (BPH.delayAttack) {
+                return;
+            }
+        }
 
     };
 
@@ -330,6 +341,19 @@ public final class KillAura extends Module {
         return false;
     }
 
+    private void setBlockState(boolean blocking, boolean disable) {
+        if (target != null) {
+            if (blocking) {
+                if (!mc.thePlayer().isBlocking() && !disable) {
+                    mc.thePlayer().sendQueue.sendPacket(new C08PacketPlayerBlockPlacement(mc.thePlayer().inventory.getCurrentItem()));
+                }
+            } else if (disable && mc.thePlayer().isBlocking()) {
+                mc.thePlayer().sendQueue.sendPacket(new C07PacketPlayerDigging(
+                        C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN));
+            }
+        }
+    }
+
     private boolean isUsingItem() {
         return mc.thePlayer().isUsingItem() && !isHoldingSword();
     }
@@ -379,7 +403,7 @@ public final class KillAura extends Module {
 
     private enum AutoblockMode {
         FAKE,
-        WATCHDOG,
+        SWITCH,
         VANILLA,
         NONE
     }

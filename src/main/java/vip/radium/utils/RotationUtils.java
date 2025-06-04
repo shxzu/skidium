@@ -2,10 +2,7 @@ package vip.radium.utils;
 
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.Vec3;
+import net.minecraft.util.*;
 import net.minecraft.world.World;
 import vip.radium.event.impl.player.UpdatePositionEvent;
 
@@ -17,10 +14,28 @@ public final class RotationUtils {
     private RotationUtils() {
     }
 
-    public static MovingObjectPosition rayTrace(float[] rot, double blockReachDistance, float partialTicks) {
-        Vec3 vec3 = mc.thePlayer().getPositionEyes(partialTicks);
-        Vec3 vec31 = mc.thePlayer().getLookCustom(rot[0], rot[1]);
-        Vec3 vec32 = vec3.addVector(vec31.xCoord * blockReachDistance, vec31.yCoord * blockReachDistance, vec31.zCoord * blockReachDistance);
+    public static boolean isLookingAtBlock(EnumFacing facing, BlockPos position, boolean strict, float reach, float yaw, float pitch) {
+        MovingObjectPosition blockHitResult = rayTraceCustom(yaw, pitch);
+        if (blockHitResult == null) {
+            return false;
+        }
+
+        if (blockHitResult.getBlockPos().getX() == position.getX() && blockHitResult.getBlockPos().getY() == position.getY() && blockHitResult.getBlockPos().getZ() == position.getZ()) {
+            if (strict) {
+                return blockHitResult.sideHit == facing;
+            } else {
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    public static MovingObjectPosition rayTraceCustom(float yaw, float pitch) {
+        double blockReachDistance = mc.getPlayerController().getBlockReachDistance();
+        final Vec3 vec3 = mc.thePlayer().getPositionEyes(1.0F);
+        final Vec3 vec31 = Entity.getVectorForRotation(pitch, yaw);
+        final Vec3 vec32 = vec3.addVector(vec31.xCoord * blockReachDistance, vec31.yCoord * blockReachDistance, vec31.zCoord * blockReachDistance);
         return mc.getWorld().rayTraceBlocks(vec3, vec32, false, false, false);
     }
 

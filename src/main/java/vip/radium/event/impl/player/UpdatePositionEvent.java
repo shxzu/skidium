@@ -58,6 +58,15 @@ public final class UpdatePositionEvent extends CancellableEvent {
         return pre;
     }
 
+    public boolean isPost() {
+        if(!pre) return true;
+        return false;
+    }
+
+    public void setPre() {
+        this.pre = true;
+    }
+
     public void setPost() {
         this.pre = false;
     }

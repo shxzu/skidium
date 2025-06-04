@@ -12,6 +12,8 @@ import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.client.C0APacketAnimation;
+import net.minecraft.network.play.client.C0BPacketEntityAction;
+import net.minecraft.potion.Potion;
 import net.minecraft.util.*;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.RandomUtils;
@@ -21,6 +23,7 @@ import vip.radium.event.impl.player.SprintEvent;
 import vip.radium.event.impl.player.UpdatePositionEvent;
 import vip.radium.event.impl.player.WindowClickEvent;
 import vip.radium.event.impl.render.overlay.Render2DEvent;
+import vip.radium.event.impl.world.TickEvent;
 import vip.radium.module.Module;
 import vip.radium.module.ModuleCategory;
 import vip.radium.module.ModuleInfo;
@@ -50,15 +53,18 @@ public final class Scaffold extends Module {
             EnumFacing.SOUTH,
             EnumFacing.NORTH};
 
-    private final EnumProperty<Scaffold.RotationsMode> rotationsModeProperty = new EnumProperty<>("Mode", Scaffold.RotationsMode.RADS);
-    private final Property<Boolean> sprintProperty = new Property<>("Sprint", false);
+    private final EnumProperty<PlaceEventMode> placeEventModeProperty = new EnumProperty<>("Place Event", PlaceEventMode.TICK);
+    private final EnumProperty<RotationsMode> rotationsModeProperty = new EnumProperty<>("Rotations", RotationsMode.WATCHDOG);
+    private final EnumProperty<RaycastMode> raycastModeProperty = new EnumProperty<>("Raycast", RaycastMode.NONE);
+    private final Property<Boolean> sprintProperty = new Property<>("Sprint", true);
     private final Property<Boolean> jumpProperty = new Property<>("Jump", false);
     private final Property<Boolean> swingProperty = new Property<>("Swing", true);
-    private final Property<Boolean> keepYProperty = new Property<>("Keep Y", true);
+    private final Property<Boolean> keepYProperty = new Property<>("Keep Y", false);
     private final Property<Boolean> safeWalkProperty = new Property<>("Safe Walk", false);
     private final Property<Boolean> towerProperty = new Property<>("Tower", true);
     private final Property<Boolean> blockCountBarProperty = new Property<>("Block Count", true);
     private final Property<Integer> blockBarColor = new Property<>("Bar Color", 0xFFFF0000, blockCountBarProperty::getValue);
+    private final DoubleProperty jumpEveryXBlocksProperty = new DoubleProperty("Jump Every X Blocks" , 1, jumpProperty::getValue, 1, 9, 1);
     private final DoubleProperty delayTicksProperty = new DoubleProperty("Delay Ticks", 1, 1, 5, 1, Representation.INT);
     private final DoubleProperty blockSlotProperty = new DoubleProperty("Override Slot", 9, 1, 9, 1);
 
@@ -73,9 +79,15 @@ public final class Scaffold extends Module {
     private float[] angles;
     private float[] rotation;
     private int placeCounter;
+    private int jumpPlaceCounter;
     private int ticksSincePlace;
     private int lastPos;
     private boolean towering;
+
+    public Scaffold() {
+        setSuffixListener(rotationsModeProperty);
+
+    }
 
     @EventLink
     public final Listener<WindowClickEvent> onWindowClickEvent = event ->
@@ -86,8 +98,93 @@ public final class Scaffold extends Module {
             safeWalkEvent.setCancelled(safeWalkProperty.getValue());
 
     @EventLink(EventBusPriorities.LOW)
+    public final Listener<TickEvent> tickEventListener = e -> {
+        if(placeEventModeProperty.getValue() != PlaceEventMode.TICK) return;
+        if (data != null && bestBlockStack >= InventoryUtils.ONLY_HOT_BAR_BEGIN) {
+            final EntityPlayerSP player = mc.thePlayer();
+
+            if (++ticksSincePlace < delayTicksProperty.getValue()) return;
+
+            player.inventory.currentItem = bestBlockStack - InventoryUtils.ONLY_HOT_BAR_BEGIN;
+
+            if(raycastModeProperty.getValue() == RaycastMode.STRICT || raycastModeProperty.getValue() == RaycastMode.SILENT) {
+                if (angles == null || rotation == null) {
+                    if (mc.getPlayerController().onPlayerRightClick(player, mc.getWorld(),
+                            player.getCurrentEquippedItem(),
+                            data.pos, data.face, data.hitVec)) {
+                        placeCounter++;
+                        jumpPlaceCounter++;
+
+                        this.towering = towerProperty.getValue() && mc.getGameSettings().keyBindJump.isKeyDown();
+
+                        if (this.towering && MovementUtils.isDistFromGround(0.0626) &&
+                                (placeCounter % 4 != 0)) {
+                            player.motionY = MovementUtils.getJumpHeight() - 0.000454352838557992;
+                        }
+
+
+                        if (swingProperty.getValue()) player.swingItem();
+                        else mc.sendPacket(new C0APacketAnimation());
+                        placed = true;
+
+                        ticksSincePlace = 0;
+                    }
+                }
+                if (RotationUtils.isLookingAtBlock(data.face, data.pos, raycastModeProperty.getValue() == RaycastMode.STRICT,
+                        4.5f, angles[0], angles[1])) {
+                    if (mc.getPlayerController().onPlayerRightClick(player, mc.getWorld(),
+                            player.getCurrentEquippedItem(),
+                            data.pos, data.face, data.hitVec)) {
+                        placeCounter++;
+                        jumpPlaceCounter++;
+
+                        this.towering = towerProperty.getValue() && mc.getGameSettings().keyBindJump.isKeyDown();
+
+                        if (this.towering && MovementUtils.isDistFromGround(0.0626) &&
+                                (placeCounter % 4 != 0)) {
+                            player.motionY = MovementUtils.getJumpHeight() - 0.000454352838557992;
+                        }
+
+
+                        if (swingProperty.getValue()) player.swingItem();
+                        else mc.sendPacket(new C0APacketAnimation());
+                        placed = true;
+
+                        ticksSincePlace = 0;
+                    }
+                }
+            } else {
+
+                if (mc.getPlayerController().onPlayerRightClick(player, mc.getWorld(),
+                        player.getCurrentEquippedItem(),
+                        data.pos, data.face, data.hitVec)) {
+                    placeCounter++;
+                    jumpPlaceCounter++;
+
+                    this.towering = towerProperty.getValue() && mc.getGameSettings().keyBindJump.isKeyDown();
+
+                    if (this.towering && MovementUtils.isDistFromGround(0.0626) &&
+                            (placeCounter % 4 != 0)) {
+                        player.motionY = MovementUtils.getJumpHeight() - 0.000454352838557992;
+                    }
+
+
+                    if (swingProperty.getValue()) player.swingItem();
+                    else mc.sendPacket(new C0APacketAnimation());
+                    placed = true;
+
+                    ticksSincePlace = 0;
+                }
+            }
+        }
+    };
+
+    @EventLink(EventBusPriorities.LOW)
     public final Listener<SprintEvent> sprintEventListener = e -> {
-        if(mc.thePlayer().onGround && jumpProperty.getValue()) mc.thePlayer().jump();
+        if(mc.thePlayer().onGround && jumpProperty.getValue() && MovementUtils.isMoving() && jumpPlaceCounter == jumpEveryXBlocksProperty.getValue()) {
+            mc.thePlayer().jump();
+            jumpPlaceCounter = 0;
+        }
     };
 
     @EventLink
@@ -114,12 +211,94 @@ public final class Scaffold extends Module {
 
     @EventLink(EventBusPriorities.HIGHEST)
     public final Listener<UpdatePositionEvent> onUpdatePositionEvent = event -> {
+        if(placeEventModeProperty.getValue() == PlaceEventMode.PRE) {
+            if (!event.isPre()) return;
+            if (data != null && bestBlockStack >= InventoryUtils.ONLY_HOT_BAR_BEGIN) {
+                final EntityPlayerSP player = mc.thePlayer();
+
+                if (++ticksSincePlace < delayTicksProperty.getValue()) return;
+
+                player.inventory.currentItem = bestBlockStack - InventoryUtils.ONLY_HOT_BAR_BEGIN;
+
+                if (raycastModeProperty.getValue() == RaycastMode.STRICT || raycastModeProperty.getValue() == RaycastMode.SILENT) {
+                    if (angles == null || rotation == null) {
+                        if (mc.getPlayerController().onPlayerRightClick(player, mc.getWorld(),
+                                player.getCurrentEquippedItem(),
+                                data.pos, data.face, data.hitVec)) {
+                            placeCounter++;
+                            jumpPlaceCounter++;
+
+                            this.towering = towerProperty.getValue() && mc.getGameSettings().keyBindJump.isKeyDown();
+
+                            if (this.towering && MovementUtils.isDistFromGround(0.0626) &&
+                                    (placeCounter % 4 != 0)) {
+                                player.motionY = MovementUtils.getJumpHeight() - 0.000454352838557992;
+                            }
+
+
+                            if (swingProperty.getValue()) player.swingItem();
+                            else mc.sendPacket(new C0APacketAnimation());
+                            placed = true;
+
+                            ticksSincePlace = 0;
+                        }
+                    }
+                    if (RotationUtils.isLookingAtBlock(data.face, data.pos, raycastModeProperty.getValue() == RaycastMode.STRICT,
+                            4.5f, angles[0], angles[1])) {
+                        if (mc.getPlayerController().onPlayerRightClick(player, mc.getWorld(),
+                                player.getCurrentEquippedItem(),
+                                data.pos, data.face, data.hitVec)) {
+                            placeCounter++;
+                            jumpPlaceCounter++;
+
+                            this.towering = towerProperty.getValue() && mc.getGameSettings().keyBindJump.isKeyDown();
+
+                            if (this.towering && MovementUtils.isDistFromGround(0.0626) &&
+                                    (placeCounter % 4 != 0)) {
+                                player.motionY = MovementUtils.getJumpHeight() - 0.000454352838557992;
+                            }
+
+
+                            if (swingProperty.getValue()) player.swingItem();
+                            else mc.sendPacket(new C0APacketAnimation());
+                            placed = true;
+
+                            ticksSincePlace = 0;
+                        }
+                    }
+                } else {
+
+                    if (mc.getPlayerController().onPlayerRightClick(player, mc.getWorld(),
+                            player.getCurrentEquippedItem(),
+                            data.pos, data.face, data.hitVec)) {
+                        placeCounter++;
+                        jumpPlaceCounter++;
+
+                        this.towering = towerProperty.getValue() && mc.getGameSettings().keyBindJump.isKeyDown();
+
+                        if (this.towering && MovementUtils.isDistFromGround(0.0626) &&
+                                (placeCounter % 4 != 0)) {
+                            player.motionY = MovementUtils.getJumpHeight() - 0.000454352838557992;
+                        }
+
+
+                        if (swingProperty.getValue()) player.swingItem();
+                        else mc.sendPacket(new C0APacketAnimation());
+                        placed = true;
+
+                        ticksSincePlace = 0;
+                    }
+                }
+            }
+        }
+
         if (!placed) {
             rotation = new float[]{90, RotationUtils.getScaffoldYaw()};
         }
         if (event.isPre()) {
             if (sprintProperty.getValue().equals(false)) {
                 mc.thePlayer().setSprinting(false);
+                mc.getNetHandler().sendPacket(new C0BPacketEntityAction(mc.thePlayer(), C0BPacketEntityAction.Action.STOP_SPRINTING));
             } else mc.thePlayer().setSprinting(true);
 
             updateBlockCount();
@@ -164,50 +343,24 @@ public final class Scaffold extends Module {
 
                 if (data != null && bestBlockStack >= 36) {
                     if (validateReplaceable(data) && data.hitVec != null) {
-                        angles = getRadsRotations(data);
-                        rotation = getGodBridgeRotations(data);
+                        if (rotationsModeProperty.getValue() == RotationsMode.RADS) {
+                            angles = getRadsRotations(data);
+                        }
+                        if (rotationsModeProperty.getValue() == RotationsMode.GODBRIDGE) {
+                            angles = getGodBridgeRotations(data);
+                        }
+                        if (rotationsModeProperty.getValue() == RotationsMode.WATCHDOG) {
+                            angles = getWatchdogRotations(data);
+                        }
                     } else {
                         data = null;
                     }
                 }
 
-                if (rotationsModeProperty.getValue() == RotationsMode.RADS) {
                     if (angles != null) {
                         RotationUtils.rotate(event, angles, 90.0F, false);
                     }
-                }
-                if (rotationsModeProperty.getValue() == RotationsMode.GOD_BRIDGE) {
-                    if (rotation != null) {
-                        RotationUtils.rotate(event, rotation, 90.0F, false);
-                    }
-                }
                 this.data = data;
-            }
-            if (data != null && bestBlockStack >= InventoryUtils.ONLY_HOT_BAR_BEGIN) {
-                final EntityPlayerSP player = mc.thePlayer();
-
-                if (++ticksSincePlace < delayTicksProperty.getValue()) return;
-
-                player.inventory.currentItem = bestBlockStack - InventoryUtils.ONLY_HOT_BAR_BEGIN;
-                if (mc.getPlayerController().onPlayerRightClick(player, mc.getWorld(),
-                        player.getCurrentEquippedItem(),
-                        data.pos, data.face, data.hitVec)) {
-                    placeCounter++;
-
-                    this.towering = towerProperty.getValue() && mc.getGameSettings().keyBindJump.isKeyDown();
-
-                    if (this.towering && MovementUtils.isDistFromGround(0.0626) &&
-                            (placeCounter % 4 != 0)) {
-                        player.motionY = MovementUtils.getJumpHeight() - 0.000454352838557992;
-                    }
-
-
-                    if (swingProperty.getValue()) player.swingItem();
-                    else mc.sendPacket(new C0APacketAnimation());
-                    placed = true;
-
-                    ticksSincePlace = 0;
-                }
             }
         }
         ;
@@ -243,12 +396,36 @@ public final class Scaffold extends Module {
     }
 
     private float[] getGodBridgeRotations(final BlockData data) {
-
-        Random random = new Random();
-
+        
+        float pitch = 78;
+        
+            for (float possiblePitch = 90; possiblePitch > 30; possiblePitch -= possiblePitch > (mc.thePlayer().isPotionActive(Potion.moveSpeed) ? 60 : 80) ? 1 : 10) {
+                if (RotationUtils.isLookingAtBlock(data.face, data.pos, true, 5, RotationUtils.getScaffoldYaw() - 15, possiblePitch)) {
+                    pitch = possiblePitch;
+                }
+            
+        }
+        
         return new float[]{
-                RotationUtils.getScaffoldYawNoStrafe() + (float) (random.nextGaussian() * 0.3),
-                80
+                (float) RotationUtils.getScaffoldYaw() - 15,
+                (float) pitch
+        };
+    }
+
+    private float[] getWatchdogRotations(final BlockData data) {
+
+        final EntityPlayerSP player = mc.thePlayer();
+
+        final Vec3 hitVec = data.hitVec;
+
+        final double xDif = hitVec.xCoord - player.posX;
+        final double zDif = hitVec.zCoord - player.posZ;
+
+        final double yDif = hitVec.yCoord - (player.posY + player.getEyeHeight());
+        final double xzDist = StrictMath.sqrt(xDif * xDif + zDif * zDif);
+        return new float[]{
+                (float) RotationUtils.getScaffoldYaw() - 80,
+                (float) (-(StrictMath.atan2(yDif, xzDist) * RotationUtils.TO_RADS))
         };
     }
 
@@ -346,6 +523,7 @@ public final class Scaffold extends Module {
     public void onEnable() {
         blockCount = 0;
         placeCounter = 0;
+        jumpPlaceCounter = 0;
         ticksSincePlace = 0;
         lastPos = (int) mc.thePlayer().posY;
         originalHotBarSlot = mc.thePlayer().inventory.currentItem;
@@ -440,7 +618,15 @@ public final class Scaffold extends Module {
         }
     }
 
+    private enum PlaceEventMode {
+        TICK, PRE
+    }
+
+    private enum RaycastMode {
+        STRICT, SILENT, NONE;
+    }
+
     private enum RotationsMode {
-        RADS, GOD_BRIDGE
+        RADS, WATCHDOG, GODBRIDGE;
     }
 }

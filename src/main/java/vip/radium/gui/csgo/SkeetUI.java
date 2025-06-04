@@ -69,12 +69,12 @@ public final class SkeetUI extends GuiScreen {
         ICONS_RENDERER.generateTextures();
 
         FONT_RENDERER = new TrueTypeFontRenderer(new Font(
-                "Tahoma", Font.PLAIN, 14), false, true);
+                "Tahoma", Font.PLAIN, 12), false, true);
 
         FONT_RENDERER.generateTextures();
 
         KEYBIND_FONT_RENDERER = new TrueTypeFontRenderer(new Font(
-                "Tahoma", Font.PLAIN, 12), false, false);
+                "Tahoma", Font.PLAIN, 10), false, false);
 
         KEYBIND_FONT_RENDERER.generateTextures();
 

@@ -8,6 +8,7 @@ import vip.radium.event.EventBusPriorities;
 import vip.radium.event.impl.packet.PacketReceiveEvent;
 import vip.radium.event.impl.player.MoveEvent;
 import vip.radium.event.impl.player.SprintEvent;
+import vip.radium.event.impl.player.UpdatePositionEvent;
 import vip.radium.module.Module;
 import vip.radium.module.ModuleCategory;
 import vip.radium.module.ModuleInfo;
@@ -19,7 +20,6 @@ import vip.radium.utils.*;
 public final class Speed extends Module {
 
     private final EnumProperty<SpeedMode> speedModeProperty = new EnumProperty<>("Mode", SpeedMode.WATCHDOG);
-    /*MC.THEPLAYER().JUMP() DOESNT WORK WITH MOVE EVENTS!*/
     private boolean wasOnGround;
     public TimerUtil timer = new TimerUtil();
     private boolean bobToggle = false;
@@ -27,8 +27,8 @@ public final class Speed extends Module {
     public static int stage;
 
 
-    @EventLink(EventBusPriorities.LOW)
-    public final Listener<SprintEvent> sprintEventListener = e -> {
+    @EventLink
+    public final Listener<UpdatePositionEvent> onUpdatePositionEvent = e -> {
         switch (speedModeProperty.getValue()) {
             case WATCHDOG:
                 if (MovementUtils.isOnGround()) {
