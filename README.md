@@ -8,7 +8,7 @@ No released yet. It's barley in early alpha. 😭
 
 Build from source clone this repository via:
 ```shell
-git clone https://github.com/sinxkyuna/skidium.git skidium
+git clone https://github.com/shxzu/skidium.git skidium
 ```
 The resulting `skidium` folder is a gradle project that can opened with your favorite IDE i.e. IntelliJ. 
 
